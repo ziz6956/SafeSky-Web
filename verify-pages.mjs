@@ -3,7 +3,9 @@ import pkg from '../node_modules/playwright/index.js';
 const { chromium } = pkg;
 
 const BASE = 'http://127.0.0.1:8931';
-const PAGES = ['index.html', 'lk.html', 'legal.html', 'code.html', 'connected.html'];
+const PAGES = ['index.html', 'lk.html', 'legal.html', 'code.html', 'connected.html', 'shader.html'];
+// shader.html — canvas без текстовых узлов: семейства не загружаются, проверка шрифтов не применима.
+const SKIP_FONTS = new Set(['shader.html']);
 
 const browser = await chromium.launch({ args: ['--no-sandbox', '--disable-gpu'] });
 let failures = 0;
@@ -50,7 +52,7 @@ for (const name of PAGES) {
   });
 
   const ok = consoleErrors.length === 0 && badResponses.length === 0 && ext.length === 0
-    && fonts.inter && fonts.sg && fonts.mso;
+    && (SKIP_FONTS.has(name) || (fonts.inter && fonts.sg && fonts.mso));
   if (!ok) failures++;
   console.log(`[${name}] ${ok ? 'PASS' : 'FAIL'}`);
   if (consoleErrors.length) console.log('  console:', consoleErrors.join(' | '));

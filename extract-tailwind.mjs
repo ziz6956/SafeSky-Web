@@ -12,6 +12,10 @@ const SWEEP_CLASSES = [
   'bg-status-active', 'flex', 'hidden', 'opacity-50', 'rotate-180', 'text-status-active',
   'animate-ping', 'bg-status-alert/10', 'bg-surface-container-low', 'border-border-crisp',
   'border-status-alert/50', 'pointer-events-none', 'animate-spin', 'opacity-40',
+  // SAF-207 5b5e14a: классы из JS renderList/picker (в исходном DOM отсутствуют)
+  'bg-status-active/10', 'shadow-[inset_0_0_0_1px_rgba(212,255,0,0.35)]',
+  'hover:bg-surface-bright', 'bg-surface-bright', 'bg-surface-container',
+  'text-left', 'w-full', 'text-text-primary', 'transition-colors', 'rounded',
 ];
 
 const browser = await chromium.launch({ args: ['--no-sandbox', '--disable-gpu'] });
