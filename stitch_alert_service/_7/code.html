@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ru"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com/3.4.17"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "outline": "#8f9378", "status-active": "#D4FF00", "secondary-fixed-dim": "#c8c6c5", "inverse-primary": "#536600", "surface-container-high": "#2a2a2a", "on-error-container": "#ffdad6", "surface": "#131313", "error-container": "#93000a", "on-tertiary-container": "#506873", "on-secondary-container": "#b6b5b4", "on-primary-fixed-variant": "#3e4c00", "on-secondary-fixed": "#1b1c1c", "status-alert": "#FF3B30", "background": "#131313", "inverse-surface": "#e5e2e1", "primary-fixed": "caf300", "surface-container-lowest": "#0e0e0e", "outline-variant": "#444932", "primary": "#ffffff", "on-primary": "#2a3400", "surface-container-highest": "#353534", "tertiary-fixed-dim": "#b1cad7", "surface-container-low": "#1c1b1b", "inverse-on-surface": "#313030", "on-surface-variant": "#c5c9ac", "on-background": "#e5e2e1", "text-on-accent": "#000000", "secondary-container": "#474746", "on-tertiary-fixed-variant": "#324a54", "text-primary": "#F5F5F5", "secondary-fixed": "#e4e2e1", "surface-container": "#201f1f", "secondary": "#c8c6c5", "on-error": "#690005", "surface-elevated": "#1E1E1E", "surface-base": "#0A0A0A", "surface-variant": "#353534", "tertiary-fixed": "#cde7f3", "primary-fixed-dim": "#b0d500", "error": "#ffb4ab", "on-primary-container": "#596c00", "surface-dim": "#131313", "surface-bright": "#3a3939", "on-secondary-fixed-variant": "#474746", "on-secondary": "#303030", "surface-tint": "#b0d500", "on-tertiary": "#1b343d", "on-surface": "#e5e2e1", "border-subtle": "rgba(255, 255, 255, 0.08)", "surface-raised": "#141414", "tertiary": "#ffffff", "on-tertiary-fixed": "#041e28", "primary-container": "#caf300", "tertiary-container": "#cde7f3", "border-crisp": "#2A2A2A", "text-secondary": "#8A8A8A", "on-primary-fixed": "#171e00" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-lg": "1.5rem", "margin-tablet": "2rem", "margin": "3rem", "space-xl": "2.5rem", "margin-mobile": "1.25rem", "space-xs": "0.25rem", "space-sm": "0.5rem", "space-md": "1rem", "gutter": "1.5rem", "gutter-mobile": "1rem" }, "fontFamily": { "headline-md": ["Space Grotesk"], "headline-xl": ["Space Grotesk"], "headline-lg-mobile": ["Space Grotesk"], "label-sm": ["Space Grotesk"], "title-md": ["Space Grotesk"], "body-lg": ["Inter"], "label-md": ["Space Grotesk"], "headline-xl-mobile": ["Space Grotesk"], "headline-lg": ["Space Grotesk"], "body-md": ["Inter"] }, "fontSize": { "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "headline-xl": ["56px", { "lineHeight": "64px", "letterSpacing": "-0.03em", "fontWeight": "700" }], "headline-lg-mobile": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "label-sm": ["10px", { "lineHeight": "14px", "letterSpacing": "0.1em", "fontWeight": "500" }], "title-md": ["18px", { "lineHeight": "24px", "letterSpacing": "0", "fontWeight": "500" }], "body-lg": ["16px", { "lineHeight": "26px", "letterSpacing": "0", "fontWeight": "400" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "600" }], "headline-xl-mobile": ["36px", { "lineHeight": "42px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "headline-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "body-md": ["14px", { "lineHeight": "22px", "letterSpacing": "0", "fontWeight": "400" }] } } } }</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;background-color:#131313;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style></head><body class="bg-surface text-on-surface font-body-md text-body-md min-h-screen flex flex-col antialiased selection:bg-status-active selection:text-text-on-accent"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.5)]"><div class="h-16 px-gutter-mobile flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0"><div class="w-9 h-9 rounded bg-surface-elevated flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-status-active text-[20px]">radar</span></div><div class="flex flex-col min-w-0"><div class="flex items-center gap-1.5"><span class="font-title-md text-title-md text-primary tracking-tight truncate">Безопасное Небо</span></div><div class="flex items-center gap-1.5"><span class="relative flex h-2 w-2 shrink-0"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-status-active opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-status-active"></span></span><span class="font-label-sm text-label-sm uppercase text-text-secondary tracking-wider">МОНИТОРИНГ</span></div></div></div><div class="flex items-center gap-space-xs shrink-0"><div class="hidden sm:flex flex-col items-end mr-1"><span class="font-label-sm text-label-sm uppercase text-status-active font-semibold">VERIFIED</span><span class="font-label-sm text-label-sm text-text-secondary">+7 (999) 040-SKY</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-24 bg-surface min-h-screen"><div class="flex flex-col w-full px-gutter-mobile space-y-space-md pb-space-xl">
+<!-- 1. Top Telemetry Bar & Live Feed Meta -->
+<section class="flex flex-col space-y-space-sm pt-space-xs">
+<!-- NOTAM Live Ticker Bar -->
+<div class="flex items-center justify-between px-space-md py-2.5 bg-surface-container-low rounded-xl">
+<div class="flex items-center space-x-2 min-w-0">
+<span class="relative flex h-2 w-2 shrink-0">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-status-active opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-status-active"></span>
+</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-text-secondary truncate">
+            Синхронизация NOTAM: 3 сек назад
+          </span>
+<span class="font-body-md text-[11px] text-text-primary/70 truncate">
+            Поток Росавиации: <span class="text-status-active font-medium">Онлайн</span>
+</span>
+</div>
+</div>
+<div class="flex items-center space-x-1 pl-2 shrink-0">
+<span class="font-label-sm text-label-sm text-text-secondary uppercase">SIP A-1</span>
+<span class="material-symbols-outlined text-[16px] text-status-active">verified_user</span>
+</div>
+</div>
+<!-- Quick Telemetry Badges (2x2 Grid) -->
+<div class="grid grid-cols-2 gap-2">
+<!-- Badge 1: Active Zones -->
+<div class="bg-surface-container p-space-sm rounded-xl flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-sm text-label-sm text-text-secondary uppercase">Активные зоны</span>
+<span class="material-symbols-outlined text-[16px] text-status-active">radar</span>
+</div>
+<div class="font-headline-md text-[19px] leading-tight text-text-primary tracking-tight font-semibold">
+          4 <span class="font-body-md text-[12px] font-normal text-text-secondary">хаба</span>
+</div>
+<div class="font-label-sm text-[10px] text-text-secondary truncate mt-0.5">
+          1 дом. + 3 мониторинг
+        </div>
+</div>
+<!-- Badge 2: Latency -->
+<div class="bg-surface-container p-space-sm rounded-xl flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-sm text-label-sm text-text-secondary uppercase">Скорость связи</span>
+<span class="material-symbols-outlined text-[16px] text-status-active">bolt</span>
+</div>
+<div class="font-headline-md text-[19px] leading-tight text-status-active tracking-tight font-semibold">
+          ≤ 60 сек
+        </div>
+<div class="font-label-sm text-[10px] text-text-secondary truncate mt-0.5">
+          Прямой SIP-пул • цель, не гарантия
+        </div>
+</div>
+<!-- Badge 3: Active Phone -->
+<div class="bg-surface-container p-space-sm rounded-xl flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-sm text-label-sm text-text-secondary uppercase">Номер оповещения</span>
+<span class="material-symbols-outlined text-[16px] text-text-secondary">ring_volume</span>
+</div>
+<div class="font-headline-md text-[13px] leading-tight text-text-primary tracking-tight font-medium truncate">
+          +7 (999) 124-85-42
+        </div>
+<div class="font-label-sm text-[10px] text-status-active truncate mt-0.5">
+          Класс А • Приоритет
+        </div>
+</div>
+<!-- Badge 4: Call Balance -->
+<div class="bg-surface-container p-space-sm rounded-xl flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-sm text-label-sm text-text-secondary uppercase">Баланс вызовов</span>
+<span class="material-symbols-outlined text-[16px] text-text-secondary">call</span>
+</div>
+<div class="font-headline-md text-[19px] leading-tight text-text-primary tracking-tight font-semibold">
+          1 / 1 <span class="font-body-md text-[12px] font-normal text-text-secondary">доступен</span>
+</div>
+<div class="font-label-sm text-[10px] text-text-secondary truncate mt-0.5">
+          Базовый аккаунт
+        </div>
+</div>
+</div>
+</section>
+<!-- 2. Actions, Header & Filter Stack -->
+<section class="space-y-space-sm">
+<div class="flex flex-col space-y-1">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-text-primary tracking-tight">
+        Отслеживаемые авиаузлы
+      </h2>
+<p class="font-body-md text-[13px] leading-snug text-text-secondary">
+        Автоматический голосовой звонок поступит при закрытии воздушной гавани или ограничении полетов
+      </p>
+</div>
+<!-- Prominent Neon Lime Button -->
+<button class="w-full flex items-center justify-center space-x-2 py-3 px-space-md bg-status-active active:bg-primary-fixed-dim text-text-on-accent rounded-xl shadow-[0_0_20px_rgba(212,255,0,0.2)] transition-transform active:scale-[0.99]" id="openAddModalBtn" type="button">
+<span class="material-symbols-outlined text-[20px] font-bold">add_circle</span>
+<span class="font-title-md text-[15px] font-semibold tracking-wide">Добавить авиаузел</span>
+</button>
+<!-- Tactical Search Field -->
+<div class="relative w-full">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-text-secondary">
+<span class="material-symbols-outlined text-[18px]">search</span>
+</div>
+<input class="w-full pl-9 pr-8 py-2.5 bg-surface-base text-text-primary font-body-md text-[13px] placeholder:text-text-secondary rounded-xl focus:outline-none focus:bg-surface-container-low transition-colors" id="airportSearchInput" placeholder="Поиск по коду аэропорта или городу..." type="text"/>
+<button class="hidden absolute inset-y-0 right-0 pr-3 items-center text-text-secondary hover:text-text-primary" id="clearSearchBtn" type="button">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+<!-- Horizontally Scrollable Region Filters -->
+<div class="flex items-center space-x-1.5 overflow-x-auto pb-1 pt-0.5 no-scrollbar -mx-gutter-mobile px-gutter-mobile">
+<button class="filter-chip px-3 py-1.5 rounded-full text-label-md font-label-md bg-status-active text-text-on-accent shrink-0 shadow-sm" data-region="all">
+        Все регионы (4)
+      </button>
+<button class="filter-chip px-3 py-1.5 rounded-full text-label-md font-label-md bg-surface-container text-text-secondary hover:text-text-primary shrink-0 transition-colors" data-region="central">
+        Центральный
+      </button>
+<button class="filter-chip px-3 py-1.5 rounded-full text-label-md font-label-md bg-surface-container text-text-secondary hover:text-text-primary shrink-0 transition-colors" data-region="northwest">
+        Северо-Запад
+      </button>
+<button class="filter-chip px-3 py-1.5 rounded-full text-label-md font-label-md bg-surface-container text-text-secondary hover:text-text-primary shrink-0 transition-colors" data-region="south">
+        Юг
+      </button>
+<button class="filter-chip px-3 py-1.5 rounded-full text-label-md font-label-md bg-surface-container text-text-secondary hover:text-text-primary shrink-0 transition-colors" data-region="volga">
+        Поволжье
+      </button>
+</div>
+</section>
+<!-- 3. Air Hub Cards List -->
+<section class="space-y-space-sm" id="hubsListContainer">
+<!-- Card 1: Московский авиаузел (MOW) - PRIMARY/HOME -->
+<article class="hub-card bg-surface-container rounded-xl p-space-md flex flex-col space-y-3 relative overflow-hidden shadow-md" data-keywords="москва mow svo dme vko zia шереметьево домодедово внуково жуковский" data-region="central">
+<!-- Ambient Home Accent bar -->
+<div class="absolute top-0 left-0 right-0 h-1 bg-status-active"></div>
+<!-- Top Row: Hub title & status badge -->
+<div class="flex items-start justify-between gap-2 pt-0.5">
+<div class="min-w-0">
+<div class="flex items-center space-x-1.5 flex-wrap">
+<span class="font-label-sm text-[10px] uppercase font-semibold text-status-active bg-status-active/10 px-1.5 py-0.5 rounded">
+              Домашний узел
+            </span>
+<span class="font-label-sm text-[10px] text-text-secondary uppercase">Основной</span>
+</div>
+<h3 class="font-title-md text-[17px] text-text-primary font-semibold mt-1 flex items-center gap-1.5">
+<span>Московский авиаузел</span>
+<span class="text-status-active font-mono text-sm">(MOW)</span>
+</h3>
+</div>
+<div class="flex items-center space-x-1 shrink-0 bg-surface-container-high px-2 py-1 rounded-full">
+<span class="h-1.5 w-1.5 rounded-full bg-status-active"></span>
+<span class="font-label-sm text-[10px] text-text-primary uppercase tracking-wide">Штатно • Открыто</span>
+</div>
+</div>
+<!-- Subtext / Airports included -->
+<p class="font-body-md text-[12px] text-text-secondary leading-tight">
+        Шереметьево (SVO) • Домодедово (DME) • Внуково (VKO) • Жуковский (ZIA)
+      </p>
+<!-- Telemetry Strip inside card -->
+<div class="bg-surface-container-low p-2.5 rounded-lg flex flex-col space-y-1.5 text-[11px]">
+<div class="flex items-center justify-between text-text-secondary">
+<span class="flex items-center space-x-1">
+<span class="material-symbols-outlined text-[14px] text-status-active">schedule</span>
+<span>Проверка 14 сек назад</span>
+</span>
+<span class="font-mono text-text-primary/70">NOTAM A1042/24</span>
+</div>
+<div class="flex items-center justify-between pt-1 text-text-secondary">
+<span class="flex items-center space-x-1">
+<span class="material-symbols-outlined text-[14px]">air</span>
+<span class="text-text-primary/90">CAVOK • Ветер 3 м/с</span>
+</span>
+<span class="font-label-sm text-[10px] text-status-active uppercase tracking-wider font-semibold">
+            Звонок: СВЕРХВЫСОКИЙ
+          </span>
+</div>
+</div>
+<!-- Action Toggles Row -->
+<div class="flex items-center justify-between pt-1">
+<div class="flex items-center space-x-4">
+<!-- Voice Toggle -->
+<label class="flex items-center space-x-2 cursor-pointer select-none">
+<div class="relative">
+<input checked="" class="sr-only toggle-switch-input" type="checkbox"/>
+<div class="toggle-bg w-8 h-4.5 bg-status-active rounded-full transition-colors flex items-center px-0.5">
+<div class="toggle-dot w-3.5 h-3.5 bg-surface-base rounded-full shadow-sm transform translate-x-3.5 transition-transform"></div>
+</div>
+</div>
+<span class="font-body-md text-[12px] text-text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-text-secondary">phone_in_talk</span>
+              Голос
+            </span>
+</label>
+<!-- Telegram Toggle -->
+<label class="flex items-center space-x-2 cursor-pointer select-none">
+<div class="relative">
+<input checked="" class="sr-only toggle-switch-input" type="checkbox"/>
+<div class="toggle-bg w-8 h-4.5 bg-status-active rounded-full transition-colors flex items-center px-0.5">
+<div class="toggle-dot w-3.5 h-3.5 bg-surface-base rounded-full shadow-sm transform translate-x-3.5 transition-transform"></div>
+</div>
+</div>
+<span class="font-body-md text-[12px] text-text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-text-secondary">send</span>
+              TG-бот
+            </span>
+</label>
+</div>
+<button class="text-status-active text-[12px] font-medium flex items-center hover:underline focus:outline-none" type="button">
+<span>Порог оповещения</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+</article>
+<!-- Card 2: Санкт-Петербург — Пулково (LED) -->
+<article class="hub-card bg-surface-container rounded-xl p-space-md flex flex-col space-y-3 relative overflow-hidden shadow-sm" data-keywords="санкт-петербург питер led pulkovo пулково северо-запад" data-region="northwest">
+<div class="flex items-start justify-between gap-2">
+<div class="min-w-0">
+<div class="flex items-center space-x-1.5">
+<span class="font-label-sm text-[10px] uppercase font-medium text-text-secondary">
+              Северо-Западный сектор
+            </span>
+</div>
+<h3 class="font-title-md text-[16px] text-text-primary font-semibold mt-0.5 flex items-center gap-1.5">
+<span>Санкт-Петербург — Пулково</span>
+<span class="text-status-active font-mono text-sm">(LED)</span>
+</h3>
+</div>
+<div class="flex items-center space-x-1 shrink-0 bg-surface-container-high px-2 py-0.5 rounded-full">
+<span class="h-1.5 w-1.5 rounded-full bg-status-active"></span>
+<span class="font-label-sm text-[10px] text-text-primary uppercase tracking-wide">Штатно • CAVOK</span>
+</div>
+</div>
+<p class="font-body-md text-[12px] text-text-secondary leading-tight">
+        Прием и выпуск бортов по штатному расписанию. Задержек нет.
+      </p>
+<div class="flex items-center justify-between text-[11px] text-text-secondary bg-surface-container-low px-2.5 py-1.5 rounded-lg">
+<span class="flex items-center space-x-1">
+<span class="material-symbols-outlined text-[13px] text-text-secondary">sync</span>
+<span>Опрос: 18 сек назад</span>
+</span>
+<span class="font-label-sm text-[10px] text-text-secondary uppercase">Росавиация LED-OK</span>
+</div>
+<div class="flex items-center justify-between pt-0.5">
+<div class="flex items-center space-x-4">
+<label class="flex items-center space-x-2 cursor-pointer select-none">
+<div class="relative">
+<input checked="" class="sr-only toggle-switch-input" type="checkbox"/>
+<div class="toggle-bg w-8 h-4.5 bg-status-active rounded-full transition-colors flex items-center px-0.5">
+<div class="toggle-dot w-3.5 h-3.5 bg-surface-base rounded-full shadow-sm transform translate-x-3.5 transition-transform"></div>
+</div>
+</div>
+<span class="font-body-md text-[12px] text-text-primary">Голос</span>
+</label>
+<label class="flex items-center space-x-2 cursor-pointer select-none">
+<div class="relative">
+<input checked="" class="sr-only toggle-switch-input" type="checkbox"/>
+<div class="toggle-bg w-8 h-4.5 bg-status-active rounded-full transition-colors flex items-center px-0.5">
+<div class="toggle-dot w-3.5 h-3.5 bg-surface-base rounded-full shadow-sm transform translate-x-3.5 transition-transform"></div>
+</div>
+</div>
+<span class="font-body-md text-[12px] text-text-primary">Telegram</span>
+</label>
+</div>
+<button class="text-text-secondary hover:text-text-primary text-[12px] flex items-center" type="button">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+</div>
+</article>
+<!-- Card 3: Сочи — Адлер (AER) -->
+<article class="hub-card bg-surface-container rounded-xl p-space-md flex flex-col space-y-3 relative overflow-hidden shadow-sm" data-keywords="сочи адлер aer sochi adler юг черное море" data-region="south">
+<div class="flex items-start justify-between gap-2">
+<div class="min-w-0">
+<div class="flex items-center space-x-1.5">
+<span class="font-label-sm text-[10px] uppercase font-medium text-text-secondary">
+              Южный кластер
+            </span>
+</div>
+<h3 class="font-title-md text-[16px] text-text-primary font-semibold mt-0.5 flex items-center gap-1.5">
+<span>Сочи — Адлер</span>
+<span class="text-status-active font-mono text-sm">(AER)</span>
+</h3>
+</div>
+<div class="flex items-center space-x-1 shrink-0 bg-surface-container-high px-2 py-0.5 rounded-full">
+<span class="h-1.5 w-1.5 rounded-full bg-status-active"></span>
+<span class="font-label-sm text-[10px] text-text-primary uppercase tracking-wide">Морской коридор</span>
+</div>
+</div>
+<p class="font-body-md text-[12px] text-text-secondary leading-tight">
+        Особый регламент захода с морской зоны. Аэродром открыт и принимает рейсы.
+      </p>
+<div class="flex items-center justify-between text-[11px] text-text-secondary bg-surface-container-low px-2.5 py-1.5 rounded-lg">
+<span class="flex items-center space-x-1">
+<span class="material-symbols-outlined text-[13px] text-text-secondary">water</span>
+<span>Глиссада: над морем</span>
+</span>
+<span class="font-label-sm text-[10px] text-text-secondary uppercase">Опрос 21 сек назад</span>
+</div>
+<div class="flex items-center justify-between pt-0.5">
+<div class="flex items-center space-x-4">
+<label class="flex items-center space-x-2 cursor-pointer select-none">
+<div class="relative">
+<input checked="" class="sr-only toggle-switch-input" type="checkbox"/>
+<div class="toggle-bg w-8 h-4.5 bg-status-active rounded-full transition-colors flex items-center px-0.5">
+<div class="toggle-dot w-3.5 h-3.5 bg-surface-base rounded-full shadow-sm transform translate-x-3.5 transition-transform"></div>
+</div>
+</div>
+<span class="font-body-md text-[12px] text-text-primary">Голос</span>
+</label>
+<label class="flex items-center space-x-2 cursor-pointer select-none">
+<div class="relative">
+<input checked="" class="sr-only toggle-switch-input" type="checkbox"/>
+<div class="toggle-bg w-8 h-4.5 bg-status-active rounded-full transition-colors flex items-center px-0.5">
+<div class="toggle-dot w-3.5 h-3.5 bg-surface-base rounded-full shadow-sm transform translate-x-3.5 transition-transform"></div>
+</div>
+</div>
+<span class="font-body-md text-[12px] text-text-primary">Telegram</span>
+</label>
+</div>
+<button class="text-text-secondary hover:text-text-primary text-[12px] flex items-center" type="button">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+</div>
+</article>
+<!-- Card 4: Казань им. Тукая (KZN) -->
+<article class="hub-card bg-surface-container rounded-xl p-space-md flex flex-col space-y-3 relative overflow-hidden shadow-sm" data-keywords="казань тукай kzn kazan поволжье татарстан" data-region="volga">
+<div class="flex items-start justify-between gap-2">
+<div class="min-w-0">
+<div class="flex items-center space-x-1.5">
+<span class="font-label-sm text-[10px] uppercase font-medium text-text-secondary">
+              Приволжский узел
+            </span>
+</div>
+<h3 class="font-title-md text-[16px] text-text-primary font-semibold mt-0.5 flex items-center gap-1.5">
+<span>Казань им. Тукая</span>
+<span class="text-status-active font-mono text-sm">(KZN)</span>
+</h3>
+</div>
+<div class="flex items-center space-x-1 shrink-0 bg-surface-container-high px-2 py-0.5 rounded-full">
+<span class="h-1.5 w-1.5 rounded-full bg-status-active"></span>
+<span class="font-label-sm text-[10px] text-text-primary uppercase tracking-wide">Видимость 10км</span>
+</div>
+</div>
+<p class="font-body-md text-[12px] text-text-secondary leading-tight">
+        Метеоусловия штатные. Отправление и прибытие без ограничений.
+      </p>
+<div class="flex items-center justify-between text-[11px] text-text-secondary bg-surface-container-low px-2.5 py-1.5 rounded-lg">
+<span class="flex items-center space-x-1">
+<span class="material-symbols-outlined text-[13px] text-text-secondary">visibility</span>
+<span>Метео: CAVOK 10km</span>
+</span>
+<span class="font-label-sm text-[10px] text-text-secondary uppercase">Опрос 25 сек назад</span>
+</div>
+<div class="flex items-center justify-between pt-0.5">
+<div class="flex items-center space-x-4">
+<label class="flex items-center space-x-2 cursor-pointer select-none">
+<div class="relative">
+<input checked="" class="sr-only toggle-switch-input" type="checkbox"/>
+<div class="toggle-bg w-8 h-4.5 bg-status-active rounded-full transition-colors flex items-center px-0.5">
+<div class="toggle-dot w-3.5 h-3.5 bg-surface-base rounded-full shadow-sm transform translate-x-3.5 transition-transform"></div>
+</div>
+</div>
+<span class="font-body-md text-[12px] text-text-primary">Голос</span>
+</label>
+<label class="flex items-center space-x-2 cursor-pointer select-none">
+<div class="relative">
+<input checked="" class="sr-only toggle-switch-input" type="checkbox"/>
+<div class="toggle-bg w-8 h-4.5 bg-status-active rounded-full transition-colors flex items-center px-0.5">
+<div class="toggle-dot w-3.5 h-3.5 bg-surface-base rounded-full shadow-sm transform translate-x-3.5 transition-transform"></div>
+</div>
+</div>
+<span class="font-body-md text-[12px] text-text-primary">Telegram</span>
+</label>
+</div>
+<button class="text-text-secondary hover:text-text-primary text-[12px] flex items-center" type="button">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+</div>
+</article>
+<!-- Empty State for Search / Filter (Hidden by default) -->
+<div class="hidden py-8 px-4 text-center bg-surface-container-low rounded-xl" id="noResultsState">
+<div class="w-12 h-12 mx-auto mb-2 rounded-full bg-surface-container-high flex items-center justify-center text-text-secondary">
+<span class="material-symbols-outlined text-[24px]">travel_explore</span>
+</div>
+<div class="font-title-md text-[15px] text-text-primary font-medium">Авиаузел не найден</div>
+<p class="font-body-md text-[12px] text-text-secondary mt-1 max-w-xs mx-auto">
+        Проверьте правильность кода IATA (например, SVO, LED, AER) или названия города
+      </p>
+</div>
+</section>
+<!-- 4. Upgrade Banner Card -->
+<section class="bg-gradient-to-br from-surface-container via-surface-elevated to-surface-container-low p-space-md rounded-xl relative overflow-hidden shadow-lg">
+<div class="flex items-start justify-between">
+<div class="space-y-1 pr-3">
+<div class="inline-flex items-center space-x-1 bg-status-active/10 px-2 py-0.5 rounded text-status-active font-label-sm text-[10px] uppercase font-semibold">
+<span class="material-symbols-outlined text-[12px]">flight</span>
+<span>Вся сетка РФ</span>
+</div>
+<h4 class="font-title-md text-[16px] text-text-primary font-semibold leading-snug pt-1">
+          Отслеживать все 24 ключевых хаба России одновременно?
+        </h4>
+<p class="font-body-md text-[12px] text-text-secondary leading-snug">
+          Неограниченные голосовые звонки, прямой SMS-шлюз и спутниковый резервный канал оповещения.
+        </p>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-base flex items-center justify-center shrink-0 text-status-active">
+<span class="material-symbols-outlined text-[22px]">public</span>
+</div>
+</div>
+<div class="mt-4 pt-3 flex flex-col space-y-2">
+<button class="w-full py-2.5 px-4 bg-status-active active:bg-primary-fixed-dim text-text-on-accent font-title-md text-[14px] font-semibold rounded-lg flex items-center justify-center space-x-1.5 shadow-sm" type="button">
+<span>Расширить до подписки (249 ₽/мес)</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+<span class="font-label-sm text-[10px] text-center text-text-secondary">
+        Бесплатный период 7 дней • Отмена в любой момент
+      </span>
+</div>
+</section>
+<!-- 5. Diagnostics & Status Accordion / Widget -->
+<section class="space-y-2.5">
+<!-- Telemetry Accordion Item 1: Gateway Status -->
+<details class="group bg-surface-container rounded-xl overflow-hidden shadow-sm" open="">
+<summary class="flex items-center justify-between p-space-md cursor-pointer select-none list-none [&amp;::-webkit-details-marker]:hidden">
+<div class="flex items-center space-x-2.5">
+<div class="w-7 h-7 rounded-lg bg-surface-container-high flex items-center justify-center text-status-active shrink-0">
+<span class="material-symbols-outlined text-[16px]">router</span>
+</div>
+<div class="flex flex-col">
+<span class="font-title-md text-[14px] text-text-primary font-medium">Шлюз оповещения</span>
+<span class="font-label-sm text-[10px] text-text-secondary uppercase">SIP активен • Задержка 14 мс</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-text-secondary group-open:rotate-180 transition-transform text-[20px]">expand_more</span>
+</summary>
+<div class="px-space-md pb-space-md pt-1 space-y-3">
+<div class="bg-surface-base p-2.5 rounded-lg flex flex-col space-y-1.5 text-[11px]">
+<div class="flex items-center justify-between">
+<span class="text-text-secondary">Номер робота-диспетчера:</span>
+<span class="text-status-active font-mono font-medium">+7 (800) 555-01-92</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-text-secondary">Кодек передачи голоса:</span>
+<span class="text-text-primary font-mono">G.711a (HD Voice)</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-text-secondary">Резервирование линии:</span>
+<span class="text-text-primary">3 магистральных оператора</span>
+</div>
+</div>
+<!-- Audio Test Trigger -->
+<button class="w-full py-2 px-3 bg-surface-container-high active:bg-surface-bright text-text-primary font-body-md text-[12px] font-medium rounded-lg flex items-center justify-center space-x-2 transition-colors" id="testCallBtn" type="button">
+<span class="material-symbols-outlined text-[16px] text-status-active">play_circle</span>
+<span id="testCallText">Тестовый прозвон шлюза (проверка звука)</span>
+</button>
+</div>
+</details>
+<!-- Telemetry Accordion Item 2: Rosaviatsiya Feed -->
+<details class="group bg-surface-container rounded-xl overflow-hidden shadow-sm">
+<summary class="flex items-center justify-between p-space-md cursor-pointer select-none list-none [&amp;::-webkit-details-marker]:hidden">
+<div class="flex items-center space-x-2.5">
+<div class="w-7 h-7 rounded-lg bg-surface-container-high flex items-center justify-center text-status-active shrink-0">
+<span class="material-symbols-outlined text-[16px]">newspaper</span>
+</div>
+<div class="flex flex-col">
+<span class="font-title-md text-[14px] text-text-primary font-medium">Оперативная сводка Росавиации</span>
+<span class="font-label-sm text-[10px] text-text-secondary uppercase">3 новых бюллетеня</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-text-secondary group-open:rotate-180 transition-transform text-[20px]">expand_more</span>
+</summary>
+<div class="px-space-md pb-space-md pt-1 space-y-2">
+<!-- Bulletins feed -->
+<div class="space-y-2 text-[12px]">
+<div class="p-2 bg-surface-base rounded-lg flex items-start space-x-2">
+<span class="h-1.5 w-1.5 rounded-full bg-status-active mt-1.5 shrink-0"></span>
+<div class="min-w-0">
+<span class="font-semibold text-text-primary">MOW (Московский сектор):</span>
+<p class="text-text-secondary text-[11px] leading-tight mt-0.5">
+                Все аэропорты функционируют штатно. Регламент ВР-4 снят.
+              </p>
+</div>
+</div>
+<div class="p-2 bg-surface-base rounded-lg flex items-start space-x-2">
+<span class="h-1.5 w-1.5 rounded-full bg-status-active mt-1.5 shrink-0"></span>
+<div class="min-w-0">
+<span class="font-semibold text-text-primary">LED (Пулково):</span>
+<p class="text-text-secondary text-[11px] leading-tight mt-0.5">
+                Интервалы посадки приведены к нормативным (3 мин). Полоса 10L чистая.
+              </p>
+</div>
+</div>
+<div class="p-2 bg-surface-base rounded-lg flex items-start space-x-2">
+<span class="h-1.5 w-1.5 rounded-full bg-status-active mt-1.5 shrink-0"></span>
+<div class="min-w-0">
+<span class="font-semibold text-text-primary">AER (Сочи):</span>
+<p class="text-text-secondary text-[11px] leading-tight mt-0.5">
+                Утренний слот посадок отработан без отклонений от расписания.
+              </p>
+</div>
+</div>
+</div>
+</div>
+</details>
+</section>
+<!-- Add Hub Slide-over / Modal (Tactical Bottom Sheet) -->
+<div class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex flex-col justify-end" id="addHubModal">
+<div class="bg-surface-elevated rounded-t-2xl p-space-md space-y-4 max-h-[85vh] overflow-y-auto">
+<div class="flex items-center justify-between pb-2">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-status-active">add_location_alt</span>
+<h3 class="font-title-md text-title-md text-text-primary">Добавить авиаузел в радар</h3>
+</div>
+<button class="text-text-secondary p-1" id="closeAddModalBtn" type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<p class="font-body-md text-[13px] text-text-secondary leading-normal">
+        Выберите узел из каталога или введите код аэропорта (IATA / ICAO).
+      </p>
+<div class="space-y-2">
+<input class="w-full px-3 py-2.5 bg-surface-base text-text-primary text-[13px] rounded-lg focus:outline-none" placeholder="Код или город (напр. KUF, Самара)..." type="text"/>
+<div class="pt-2">
+<span class="font-label-sm text-[10px] uppercase text-text-secondary">Быстрый выбор:</span>
+<div class="grid grid-cols-2 gap-2 mt-2">
+<button class="p-2.5 bg-surface-container rounded-lg text-left flex items-center justify-between hover:bg-surface-container-high transition-colors" type="button">
+<div>
+<div class="font-semibold text-[13px] text-text-primary">Новосибирск (OVB)</div>
+<div class="text-[11px] text-text-secondary">Толмачёво</div>
+</div>
+<span class="material-symbols-outlined text-status-active text-[18px]">add</span>
+</button>
+<button class="p-2.5 bg-surface-container rounded-lg text-left flex items-center justify-between hover:bg-surface-container-high transition-colors" type="button">
+<div>
+<div class="font-semibold text-[13px] text-text-primary">Екатеринбург (SVX)</div>
+<div class="text-[11px] text-text-secondary">Кольцово</div>
+</div>
+<span class="material-symbols-outlined text-status-active text-[18px]">add</span>
+</button>
+</div>
+</div>
+</div>
+<div class="pt-2">
+<button class="w-full py-3 bg-status-active text-text-on-accent font-semibold text-[14px] rounded-xl" id="confirmAddBtn" type="button">
+          Подключить мониторинг
+        </button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    // 1. Search & Filter Behavior
+    const searchInput = document.getElementById('airportSearchInput');
+    const clearBtn = document.getElementById('clearSearchBtn');
+    const filterChips = document.querySelectorAll('.filter-chip');
+    const hubCards = document.querySelectorAll('.hub-card');
+    const noResults = document.getElementById('noResultsState');
+
+    let currentRegion = 'all';
+
+    function filterCards() {
+      const query = (searchInput.value || '').trim().toLowerCase();
+      let visibleCount = 0;
+
+      hubCards.forEach(card => {
+        const cardRegion = card.getAttribute('data-region');
+        const keywords = card.getAttribute('data-keywords') || '';
+        const textContent = card.innerText.toLowerCase();
+
+        const matchesRegion = (currentRegion === 'all' || cardRegion === currentRegion);
+        const matchesQuery = (!query || keywords.includes(query) || textContent.includes(query));
+
+        if (matchesRegion && matchesQuery) {
+          card.classList.remove('hidden');
+          visibleCount++;
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+
+      if (visibleCount === 0) {
+        noResults.classList.remove('hidden');
+      } else {
+        noResults.classList.add('hidden');
+      }
+
+      if (query.length > 0) {
+        clearBtn.classList.remove('hidden');
+        clearBtn.classList.add('flex');
+      } else {
+        clearBtn.classList.add('hidden');
+        clearBtn.classList.remove('flex');
+      }
+    }
+
+    if (searchInput) {
+      searchInput.addEventListener('input', filterCards);
+    }
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        filterCards();
+        searchInput.focus();
+      });
+    }
+
+    filterChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        filterChips.forEach(c => {
+          c.classList.remove('bg-status-active', 'text-text-on-accent');
+          c.classList.add('bg-surface-container', 'text-text-secondary');
+        });
+        chip.classList.add('bg-status-active', 'text-text-on-accent');
+        chip.classList.remove('bg-surface-container', 'text-text-secondary');
+
+        currentRegion = chip.getAttribute('data-region');
+        filterCards();
+      });
+    });
+
+    // 2. Interactive switches micro-interaction
+    const toggleInputs = document.querySelectorAll('.toggle-switch-input');
+    toggleInputs.forEach(input => {
+      input.addEventListener('change', function() {
+        const bg = this.nextElementSibling;
+        const dot = bg.querySelector('.toggle-dot');
+        if (this.checked) {
+          bg.classList.add('bg-status-active');
+          bg.classList.remove('bg-surface-container-high');
+          dot.classList.add('translate-x-3.5');
+          dot.classList.remove('translate-x-0');
+        } else {
+          bg.classList.remove('bg-status-active');
+          bg.classList.add('bg-surface-container-high');
+          dot.classList.remove('translate-x-3.5');
+          dot.classList.add('translate-x-0');
+        }
+      });
+    });
+
+    // 3. Test Call Button Feedback
+    const testCallBtn = document.getElementById('testCallBtn');
+    const testCallText = document.getElementById('testCallText');
+    if (testCallBtn && testCallText) {
+      testCallBtn.addEventListener('click', () => {
+        testCallText.textContent = 'Звонок отправлен на +7 (999) 124-85-42...';
+        testCallBtn.classList.add('text-status-active');
+        setTimeout(() => {
+          testCallText.textContent = 'Проверка шлюза завершена успешно (200 OK)';
+          setTimeout(() => {
+            testCallText.textContent = 'Тестовый прозвон шлюза (проверка звука)';
+            testCallBtn.classList.remove('text-status-active');
+          }, 2400);
+        }, 1500);
+      });
+    }
+
+    // 4. Modal Interactions
+    const openAddModalBtn = document.getElementById('openAddModalBtn');
+    const closeAddModalBtn = document.getElementById('closeAddModalBtn');
+    const confirmAddBtn = document.getElementById('confirmAddBtn');
+    const addHubModal = document.getElementById('addHubModal');
+
+    function toggleModal(show) {
+      if (show) {
+        addHubModal.classList.remove('hidden');
+      } else {
+        addHubModal.classList.add('hidden');
+      }
+    }
+
+    if (openAddModalBtn) openAddModalBtn.addEventListener('click', () => toggleModal(true));
+    if (closeAddModalBtn) closeAddModalBtn.addEventListener('click', () => toggleModal(false));
+    if (confirmAddBtn) confirmAddBtn.addEventListener('click', () => toggleModal(false));
+
+    // Close on overlay backdrop tap
+    if (addHubModal) {
+      addHubModal.addEventListener('click', (e) => {
+        if (e.target === addHubModal) toggleModal(false);
+      });
+    }
+  })();
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-4px_16px_rgba(0,0,0,0.4)]" data-active-classes="text-status-active"><div class="flex justify-around items-center h-16 px-space-xs"><a aria-current="page" class="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-2 py-1 gap-0.5 transition-colors text-status-active" data-path="air-hubs" href="#"><span class="material-symbols-outlined text-[22px]">flight_takeoff</span><span class="font-label-sm text-label-sm tracking-wide">Хабы</span></a><a class="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-2 py-1 gap-0.5 text-on-surface-variant hover:text-on-surface transition-colors" data-path="comm-channels" href="#"><span class="material-symbols-outlined text-[22px]">cell_tower</span><span class="font-label-sm text-label-sm tracking-wide">Связь</span></a><a class="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-2 py-1 gap-0.5 text-on-surface-variant hover:text-on-surface transition-colors" data-path="notam-bulletin" href="#"><span class="material-symbols-outlined text-[22px]">feed</span><span class="font-label-sm text-label-sm tracking-wide">NOTAM</span></a><a class="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-2 py-1 gap-0.5 text-on-surface-variant hover:text-on-surface transition-colors" data-path="profile-tier" href="#"><span class="material-symbols-outlined text-[22px]">shield_person</span><span class="font-label-sm text-label-sm tracking-wide">Тариф</span></a></div></nav></body></html>
