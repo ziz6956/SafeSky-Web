@@ -1,0 +1,39 @@
+// SafeSky backend — схема БД.
+// Prisma обязателен по постановке: перенос БД на VPS (SAF-86) — сменой строки
+// подключения DATABASE_URL без изменений кода.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Пользователь: создаётся в момент успешной верификации SMS-кода.
+model User {
+  id           String   @id @default(cuid())
+  phone        String   @unique // E.164: +79XXXXXXXXX
+  airport      String   @default("DME") // IATA-код домашнего аэропорта
+  callsEnabled Boolean  @default(true) // тумблер «Уведомлять звонком»
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("users")
+}
+
+/// Одноразовый SMS-код. Хранится только HMAC-SHA256 кода (JWT_SECRET),
+/// открытым текстом код в БД не лежит. TTL и попытки — серверно.
+model SmsCode {
+  id        String    @id @default(cuid())
+  phone     String // E.164, код ещё не привязан к User (регистрация не завершена)
+  codeHash  String
+  attempts  Int       @default(0) // неверных попыток; >= 3 — код мёртв
+  expiresAt DateTime // TTL 5 минут с момента отправки
+  usedAt    DateTime? // проставлен при успешной верификации
+  createdAt DateTime  @default(now()) // момент отправки (от него считаем ресенд ≥30 с)
+
+  @@index([phone, createdAt])
+  @@map("sms_codes")
+}

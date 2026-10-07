@@ -1,0 +1,37 @@
+# Локальный запуск всего контура одной командой: docker compose up --build
+# - db: PostgreSQL 16 (аналог Supabase)
+# - backend: собирается из Dockerfile, миграции накатываются при старте
+# SMS-коды в dev печатаются в лог бэкенда: docker compose logs -f backend
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: safesky
+      POSTGRES_PASSWORD: safesky
+      POSTGRES_DB: safesky
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U safesky -d safesky"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://safesky:safesky@db:5432/safesky?schema=public
+      JWT_SECRET: dev-secret-change-me
+      CORS_ORIGINS: https://ziz6956.github.io
+      SMS_PROVIDER: console
+      PORT: "3000"
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:
