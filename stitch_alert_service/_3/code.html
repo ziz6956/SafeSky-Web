@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<meta content="web_standard" name="shell-type"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+    @layer base {
+      html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #0A0A0B;
+        color: #F5F5F5;
+        -webkit-tap-highlight-color: transparent;
+      }
+      body {
+        overscroll-behavior-y: none;
+      }
+    }
+    ::-webkit-scrollbar {
+      display: none;
+    }
+  </style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-base": "#0A0A0B",
+            "surface": "#131313",
+            "surface-raised": "#161618",
+            "surface-elevated": "#1E1E22",
+            "surface-container": "#242428",
+            "surface-container-low": "#19191B",
+            "surface-container-lowest": "#0E0E10",
+            "status-active": "#D4FF00",
+            "status-alert": "#FF3B30",
+            "text-primary": "#F5F5F5",
+            "text-secondary": "#9E9E9E",
+            "text-on-accent": "#000000",
+            "border-crisp": "#26262B",
+            "border-subtle": "rgba(255, 255, 255, 0.08)"
+          },
+          fontFamily: {
+            "headline": ["Space Grotesk", "sans-serif"],
+            "title": ["Space Grotesk", "sans-serif"],
+            "label": ["Space Grotesk", "sans-serif"],
+            "body": ["Inter", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-surface-base text-text-primary font-body antialiased selection:bg-status-active selection:text-text-on-accent">
+<!-- 1. MOBILE HEADER -->
+<header class="fixed top-0 inset-x-0 z-50 bg-[#0A0A0B]/90 backdrop-blur-xl border-b border-border-crisp">
+<div class="h-16 px-4 flex items-center justify-between">
+<!-- Logo + Status -->
+<a class="flex items-center gap-2" href="#">
+<div class="w-6 h-6 rounded bg-status-active flex items-center justify-center">
+<div class="w-2 h-2 rounded-full bg-text-on-accent"></div>
+</div>
+<span class="font-headline font-bold text-sm tracking-wide uppercase text-text-primary">Безопасное Небо</span>
+</a>
+<!-- Compact Indicator & Mobile CTA Button -->
+<div class="flex items-center gap-2">
+<div class="flex items-center gap-1.5 px-2 py-1 rounded bg-surface-container-low border border-border-crisp">
+<span class="w-1.5 h-1.5 rounded-full bg-status-active animate-pulse"></span>
+<span class="font-headline font-semibold text-[10px] text-status-active tracking-wider">Активен</span>
+</div>
+<a class="px-3 py-1.5 rounded bg-status-active text-text-on-accent font-headline font-bold text-xs tracking-tight hover:brightness-105 active:scale-95 transition-transform" href="#register">
+          Подключить
+        </a>
+</div>
+</div>
+</header>
+<!-- MAIN WRAPPER -->
+<main class="pt-20 flex flex-col w-full overflow-x-hidden">
+<!-- 2. HERO SECTION -->
+<section class="relative px-4 pt-4 pb-8 flex flex-col items-center overflow-hidden">
+<!-- Glow effect -->
+<div class="absolute -top-12 left-1/2 -translate-x-1/2 w-72 h-72 bg-status-active/10 rounded-full blur-[90px] pointer-events-none"></div>
+<!-- Status chip -->
+<div class="relative z-10 w-full mb-5">
+<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-raised border border-border-crisp w-full justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-status-active shrink-0 animate-ping"></span>
+<span class="font-headline font-semibold text-[9.5px] text-text-primary tracking-wider uppercase text-center truncate">
+            МОНИТОРИНГ ВОЗДУШНЫХ ГАВАНЕЙ ПО ОТКРЫТЫМ ДАННЫМ NOTAM
+          </span>
+</div>
+</div>
+<!-- Headline -->
+<h1 class="relative z-10 font-headline font-bold text-[28px] leading-[34px] tracking-tight text-center text-text-primary mb-3">
+        Дополнительный телефонный канал.
+        <span class="text-status-active block mt-1">Звонок при закрытии аэропорта.</span>
+</h1>
+<!-- Subtitle -->
+<p class="relative z-10 font-body text-sm leading-relaxed text-text-secondary text-center mb-6">
+        Бесплатный тариф — Telegram-бот и 1 экстренный звонок в месяц на время пилота. Никакого шума: информируем только в момент фиксации ограничений.
+      </p>
+<!-- CTAs -->
+<div class="relative z-10 flex flex-col w-full gap-3 mb-6">
+<a class="w-full py-3.5 px-4 rounded-lg bg-status-active text-text-on-accent font-headline font-bold text-sm tracking-tight text-center shadow-[0_0_20px_rgba(212,255,0,0.25)] active:scale-[0.98] transition-transform" href="#register">
+          Зарегистрироваться бесплатно
+        </a>
+<a class="w-full py-3.5 px-4 rounded-lg bg-surface-raised border border-border-crisp text-text-primary font-headline font-semibold text-sm tracking-tight text-center active:bg-surface-elevated transition-colors" href="#how-it-works">
+          Узнать принцип работы
+        </a>
+</div>
+<!-- Metrics: 3 mobile stat cards -->
+<div class="relative z-10 grid grid-cols-3 gap-2 w-full mb-6">
+<div class="bg-surface-raised border border-border-crisp rounded-lg p-2.5 flex flex-col items-center text-center">
+<span class="font-headline font-bold text-base text-status-active">Резервирование</span>
+<span class="font-headline font-medium text-[9px] text-text-secondary uppercase tracking-tight mt-0.5 leading-tight">каналы связи</span>
+</div>
+<div class="bg-surface-raised border border-border-crisp rounded-lg p-2.5 flex flex-col items-center text-center">
+<span class="font-headline font-bold text-base text-text-primary">≤ 60 сек</span>
+<span class="font-headline font-medium text-[9px] text-text-secondary uppercase tracking-tight mt-0.5 leading-tight">целевая задержка оповещения (метрика, не гарантия)</span>
+</div>
+<div class="bg-surface-raised border border-border-crisp rounded-lg p-2.5 flex flex-col items-center text-center">
+<span class="font-headline font-bold text-base text-text-primary">Авто</span>
+<span class="font-headline font-medium text-[9px] text-text-secondary uppercase tracking-tight mt-0.5 leading-tight">работа без участия человека</span>
+</div>
+</div>
+<!-- 3. RADAR VISUAL BOX WITH WEBGL CANVAS -->
+<div class="relative z-10 w-full h-[280px] rounded-2xl border border-border-crisp bg-[#0A0A0B] overflow-hidden shadow-xl">
+<!-- Canvas -->
+<canvas class="w-full h-full block bg-[#0A0A0B]" id="mobile-radar-canvas"></canvas>
+<!-- Radar Telemetry Overlays -->
+<div class="absolute inset-0 pointer-events-none p-3 flex flex-col justify-between">
+<!-- Top indicators -->
+<div class="flex items-center justify-between gap-1">
+<div class="flex items-center gap-1.5 px-2 py-1 rounded bg-surface-base/80 backdrop-blur border border-border-crisp">
+<span class="w-1.5 h-1.5 rounded-full bg-status-active animate-ping"></span>
+<span class="font-headline font-semibold text-[9px] text-status-active tracking-wider">NOTAM / METAR</span>
+</div>
+<div class="px-2 py-1 rounded bg-surface-base/80 backdrop-blur border border-border-crisp">
+<span class="font-headline text-[9px] text-text-secondary tracking-wider">СЕТЬ: <span class="text-status-active font-semibold">ШТАТНО</span></span>
+</div>
+</div>
+<!-- Bottom indicators -->
+<div class="flex flex-col gap-1.5">
+<div class="px-2.5 py-1 rounded bg-surface-base/80 backdrop-blur border border-border-crisp text-center">
+<span class="font-headline text-[9px] text-text-secondary tracking-wider">
+                ХАБЫ: <span class="text-text-primary font-medium">SVO DME VKO LED AER KUF ROV</span>
+</span>
+</div>
+<div class="flex items-center justify-center gap-1.5 py-0.5">
+<span class="material-symbols-outlined text-[12px] text-status-active">lock</span>
+<span class="font-headline font-medium text-[9px] text-text-secondary tracking-wider uppercase">Защищённый канал связи</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 4. SECTION 'КАК ЭТО РАБОТАЕТ' -->
+<section class="px-4 py-8 border-t border-border-subtle bg-surface-container-low/50" id="how-it-works">
+<div class="flex flex-col mb-6">
+<div class="flex items-center gap-1.5 text-status-active font-headline font-semibold text-[10px] tracking-widest uppercase mb-1">
+<span class="w-1.5 h-1.5 bg-status-active"></span>
+          Архитектура оповещения
+        </div>
+<h2 class="font-headline font-bold text-2xl tracking-tight text-text-primary">
+          КАК ЭТО РАБОТАЕТ
+        </h2>
+<p class="font-body text-sm text-text-secondary mt-1">
+          Трёхэтапная система без лишнего шума и ложных тревог.
+        </p>
+</div>
+<!-- 3 Stacked Step Cards -->
+<div class="flex flex-col gap-3">
+<!-- Step 1 -->
+<div class="p-4 rounded-xl bg-surface-raised border border-border-crisp">
+<div class="flex items-center justify-between mb-3">
+<span class="font-headline font-bold text-2xl text-status-active">01</span>
+<div class="w-8 h-8 rounded bg-surface-container flex items-center justify-center text-status-active">
+<span class="material-symbols-outlined text-[18px]">radar</span>
+</div>
+</div>
+<h3 class="font-headline font-semibold text-base text-text-primary mb-1">
+            Мониторим открытые данные
+          </h3>
+<p class="font-body text-xs leading-relaxed text-text-secondary">
+            Непрерывная цифровая фиксация статусов NOTAM, диспетчерских сводок и регламентов гражданской авиации в режиме реального времени.
+          </p>
+<div class="mt-3 pt-2.5 border-t border-border-subtle flex items-center gap-1.5 font-headline text-[10px] text-text-secondary">
+<span class="w-1.5 h-1.5 rounded-full bg-status-active"></span>
+            Опрос шины данных каждые 3 секунды
+          </div>
+</div>
+<!-- Step 2 -->
+<div class="p-4 rounded-xl bg-surface-raised border border-border-crisp">
+<div class="flex items-center justify-between mb-3">
+<span class="font-headline font-bold text-2xl text-status-active">02</span>
+<div class="w-8 h-8 rounded bg-surface-container flex items-center justify-center text-status-active">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+</div>
+</div>
+<h3 class="font-headline font-semibold text-base text-text-primary mb-1">
+            Проверяем событие
+          </h3>
+<p class="font-body text-xs leading-relaxed text-text-secondary">
+            Автоматическая кросс-верификация закрытия воздушного пространства по нескольким независимым источникам для исключения ложных срабатываний.
+          </p>
+<div class="mt-3 pt-2.5 border-t border-border-subtle flex items-center gap-1.5 font-headline text-[10px] text-text-secondary">
+<span class="w-1.5 h-1.5 rounded-full bg-status-active"></span>
+            Двухуровневый алгоритм фильтрации
+          </div>
+</div>
+<!-- Step 3 -->
+<div class="p-4 rounded-xl bg-surface-raised border border-border-crisp">
+<div class="flex items-center justify-between mb-3">
+<span class="font-headline font-bold text-2xl text-status-active">03</span>
+<div class="w-8 h-8 rounded bg-surface-container flex items-center justify-center text-status-active">
+<span class="material-symbols-outlined text-[18px]">phone_in_talk</span>
+</div>
+</div>
+<h3 class="font-headline font-semibold text-base text-text-primary mb-1">
+            Звоним вам
+          </h3>
+<p class="font-body text-xs leading-relaxed text-text-secondary">
+            Голосовой вызов на ваш телефон. Телефонный звонок — дополнительный канал: настройки телефона не меняются; на беззвучном режиме звонок может быть не услышан.
+          </p>
+<div class="mt-3 pt-2.5 border-t border-border-subtle flex items-center gap-1.5 font-headline text-[10px] text-text-secondary">
+<span class="w-1.5 h-1.5 rounded-full bg-status-active"></span>
+            Прямой SIP-канал с приоритетным дозвоном
+          </div>
+</div>
+</div>
+</section>
+<!-- 5. SECTION 'ПОЧЕМУ НАМ МОЖНО ДОВЕРЯТЬ' -->
+<section class="px-4 py-8 border-t border-border-subtle bg-surface-base">
+<div class="flex flex-col mb-6">
+<span class="font-headline font-semibold text-[10px] text-status-active tracking-widest uppercase mb-1">НАДЁЖНОСТЬ И КОНТУР БЕЗОПАСНОСТИ</span>
+<h2 class="font-headline font-bold text-2xl tracking-tight text-text-primary">
+          Почему нам можно доверять
+        </h2>
+<p class="font-body text-xs leading-relaxed text-text-secondary mt-2">
+          Мы создали инженерный контур, где человеческий фактор сведен к нулю, а критическая информация доставляется по зарезервированным каналам связи.
+        </p>
+</div>
+<div class="flex flex-col gap-3">
+<!-- Trust Card 1 -->
+<div class="p-4 rounded-xl bg-surface-raised border border-border-crisp">
+<div class="w-9 h-9 rounded bg-surface-container flex items-center justify-center text-status-active mb-3">
+<span class="material-symbols-outlined text-[20px]">dns</span>
+</div>
+<h3 class="font-headline font-semibold text-base text-text-primary mb-1">
+            Автономный контур
+          </h3>
+<p class="font-body text-xs leading-relaxed text-text-secondary">
+            Наша инфраструктура развернута на изолированных серверах с резервными спутниковыми и оптическими каналами связи, независимыми от сбоев публичных сетей.
+          </p>
+</div>
+<!-- Trust Card 2 -->
+<div class="p-4 rounded-xl bg-surface-raised border border-border-crisp">
+<div class="w-9 h-9 rounded bg-surface-container flex items-center justify-center text-status-active mb-3">
+<span class="material-symbols-outlined text-[20px]">shield</span>
+</div>
+<h3 class="font-headline font-semibold text-base text-text-primary mb-1">
+            Данные на российском сервере
+          </h3>
+<p class="font-body text-xs leading-relaxed text-text-secondary">
+            Полное соответствие требованиям 152-ФЗ. Номера телефонов хранятся в зашифрованном виде (AES-256), не передаются третьим лицам и используются исключительно для критических звонков.
+          </p>
+</div>
+<!-- Trust Card 3 -->
+<div class="p-4 rounded-xl bg-surface-raised border border-border-crisp">
+<div class="w-9 h-9 rounded bg-surface-container flex items-center justify-center text-status-active mb-3">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</div>
+<h3 class="font-headline font-semibold text-base text-text-primary mb-1">
+            Бесплатный тариф — наша миссия
+          </h3>
+<p class="font-body text-xs leading-relaxed text-text-secondary">
+            Мы убеждены, что базовая безопасность и осведомленность близких должны быть доступны каждому гражданину без условий и скрытых платежей.
+          </p>
+</div>
+</div>
+</section>
+<!-- 6. SECTION 'ВЫБЕРИТЕ ФОРМАТ ЗАЩИТЫ' (ТАРИФЫ) -->
+<section class="px-4 py-8 border-t border-border-subtle bg-surface-container-low/40">
+<div class="flex flex-col text-center items-center mb-6">
+<span class="font-headline font-semibold text-[10px] text-status-active tracking-widest uppercase mb-1">ПРОЗРАЧНЫЕ ТАРИФЫ</span>
+<h2 class="font-headline font-bold text-2xl tracking-tight text-text-primary">
+          Выберите формат защиты
+        </h2>
+<p class="font-body text-xs text-text-secondary mt-1">
+          Базовая гражданская безопасность бесплатна на время пилота. Для семейной защиты доступен расширенный тариф.
+        </p>
+</div>
+<div class="flex flex-col gap-4">
+<!-- CARD 1: БЕСПЛАТНЫЙ (HIGHLIGHTED) -->
+<div class="p-5 rounded-2xl bg-surface-raised border-2 border-status-active relative shadow-[0_0_24px_rgba(212,255,0,0.12)]">
+<div class="flex items-center justify-between mb-3">
+<span class="px-2 py-0.5 rounded bg-status-active text-text-on-accent font-headline font-bold text-[10px] tracking-wider uppercase">
+              НАША МИССИЯ
+            </span>
+<span class="font-headline font-semibold text-[10px] text-status-active tracking-wider uppercase">
+              РЕКОМЕНДОВАНО
+            </span>
+</div>
+<h3 class="font-headline font-bold text-xl text-text-primary mb-1">Бесплатный</h3>
+<div class="flex items-baseline gap-1 mb-4">
+<span class="font-headline font-bold text-3xl text-text-primary">0 ₽</span>
+<span class="font-body text-xs text-text-secondary">/ месяц на время пилота</span>
+</div>
+<div class="h-px bg-border-crisp w-full mb-4"></div>
+<ul class="flex flex-col gap-2.5 mb-5 font-body text-xs">
+<li class="flex items-start gap-2 text-text-primary">
+<span class="material-symbols-outlined text-status-active text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span><strong>1 экстренный голосовой звонок</strong> в месяц</span>
+</li>
+<li class="flex items-start gap-2 text-text-primary">
+<span class="material-symbols-outlined text-status-active text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span>Неограниченные уведомления в Telegram-боте</span>
+</li>
+<li class="flex items-start gap-2 text-text-primary">
+<span class="material-symbols-outlined text-status-active text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span>Выбор 1 домашнего аэропорта или региона</span>
+</li>
+<li class="flex items-start gap-2 text-text-primary">
+<span class="material-symbols-outlined text-status-active text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span>Базовый приоритет телефонного шлюза</span>
+</li>
+</ul>
+<a class="block w-full py-3.5 rounded-lg bg-status-active text-text-on-accent font-headline font-bold text-sm tracking-tight text-center active:brightness-95 transition-all" href="#register">
+            Подключить бесплатно
+          </a>
+</div>
+<!-- CARD 2: ПОДПИСКА -->
+<div class="p-5 rounded-2xl bg-surface-raised border border-border-crisp relative">
+<div class="flex items-center justify-between mb-3">
+<span class="px-2 py-0.5 rounded bg-surface-container border border-border-crisp text-text-secondary font-headline font-semibold text-[10px] tracking-wider uppercase">
+              МАКСИМАЛЬНОЕ СПОКОЙСТВИЕ
+            </span>
+</div>
+<h3 class="font-headline font-bold text-xl text-text-primary mb-1">Подписка</h3>
+<div class="flex items-baseline gap-1 mb-4">
+<span class="font-headline font-bold text-3xl text-text-primary">249 ₽</span>
+<span class="font-body text-xs text-text-secondary">/ месяц</span>
+</div>
+<div class="h-px bg-border-crisp w-full mb-4"></div>
+<ul class="flex flex-col gap-2.5 mb-5 font-body text-xs">
+<li class="flex items-start gap-2 text-text-primary">
+<span class="material-symbols-outlined text-text-secondary text-[18px] shrink-0 mt-0.5">check</span>
+<span><strong>Неограниченное число</strong> экстренных звонков</span>
+</li>
+<li class="flex items-start gap-2 text-text-primary">
+<span class="material-symbols-outlined text-text-secondary text-[18px] shrink-0 mt-0.5">check</span>
+<span>Добавление до 5 номеров близких (семейный контур)</span>
+</li>
+<li class="flex items-start gap-2 text-text-primary">
+<span class="material-symbols-outlined text-text-secondary text-[18px] shrink-0 mt-0.5">check</span>
+<span>Мониторинг всех аэропортов России</span>
+</li>
+<li class="flex items-start gap-2 text-text-primary">
+<span class="material-symbols-outlined text-text-secondary text-[18px] shrink-0 mt-0.5">check</span>
+<span>Высший приоритет через SIP-магистраль</span>
+</li>
+<li class="flex items-start gap-2 text-text-primary">
+<span class="material-symbols-outlined text-text-secondary text-[18px] shrink-0 mt-0.5">check</span>
+<span>SMS-дублирование при недоступности сети</span>
+</li>
+</ul>
+<a class="block w-full py-3.5 rounded-lg bg-surface-container border border-border-crisp text-text-primary font-headline font-semibold text-sm tracking-tight text-center active:bg-surface-elevated transition-all" href="#register">
+            Оформить подписку
+          </a>
+</div>
+</div>
+</section>
+<!-- 7. SECTION 'ЧАСТЫЕ ВОПРОСЫ' (FAQ DETAILS ACCORDION) -->
+<section class="px-4 py-8 border-t border-border-subtle bg-surface-base">
+<div class="flex flex-col text-center items-center mb-6">
+<span class="font-headline font-semibold text-[10px] text-status-active tracking-widest uppercase mb-1">ВОПРОСЫ И ОТВЕТЫ</span>
+<h2 class="font-headline font-bold text-2xl tracking-tight text-text-primary">
+          Частые вопросы
+        </h2>
+<p class="font-body text-xs text-text-secondary mt-1">
+          Всё, что важно знать о принципах работы телефонного шлюза и регламентах.
+        </p>
+</div>
+<div class="flex flex-col gap-2.5">
+<!-- Item 1 -->
+<details class="group rounded-xl bg-surface-raised border border-border-crisp overflow-hidden">
+<summary class="flex items-center justify-between p-4 cursor-pointer list-none font-headline font-semibold text-xs text-text-primary select-none">
+<span>Чем звонок лучше обычного Telegram-канала или новостей?</span>
+<span class="material-symbols-outlined text-[20px] text-text-secondary group-open:rotate-180 transition-transform duration-200">expand_more</span>
+</summary>
+<div class="px-4 pb-4 pt-1 font-body text-xs leading-relaxed text-text-secondary border-t border-border-subtle">
+            Звонок — дополнительный канал: в отличие от беззвучных push-уведомлений мессенджеров, он привлечёт внимание, даже если вы спите или находитесь за рулём. Настройки телефона не меняются; на полностью беззвучном режиме звонок может быть не услышан.
+          </div>
+</details>
+<!-- Item 2 -->
+<details class="group rounded-xl bg-surface-raised border border-border-crisp overflow-hidden">
+<summary class="flex items-center justify-between p-4 cursor-pointer list-none font-headline font-semibold text-xs text-text-primary select-none">
+<span>Откуда берутся сведения об ограничениях полётов?</span>
+<span class="material-symbols-outlined text-[20px] text-text-secondary group-open:rotate-180 transition-transform duration-200">expand_more</span>
+</summary>
+<div class="px-4 pb-4 pt-1 font-body text-xs leading-relaxed text-text-secondary border-t border-border-subtle">
+            Мы обрабатываем открытые данные NOTAM, оперативные сообщения Росавиации и статусы диспетчерских служб гражданских аэропортов — без задержек и человеческого фактора.
+          </div>
+</details>
+<!-- Item 3 -->
+<details class="group rounded-xl bg-surface-raised border border-border-crisp overflow-hidden">
+<summary class="flex items-center justify-between p-4 cursor-pointer list-none font-headline font-semibold text-xs text-text-primary select-none">
+<span>Что именно говорит робот во время звонка?</span>
+<span class="material-symbols-outlined text-[20px] text-text-secondary group-open:rotate-180 transition-transform duration-200">expand_more</span>
+</summary>
+<div class="px-4 pb-4 pt-1 font-body text-xs leading-relaxed text-text-secondary border-t border-border-subtle">
+            Спокойный нейтральный синтезированный голос сообщает факт: наименование закрытого аэропорта, точное время введения режима и рекомендует следовать актуальным указаниям аэропорта. Сообщение сформулировано предельно нейтрально и без паники.
+          </div>
+</details>
+<!-- Item 4 -->
+<details class="group rounded-xl bg-surface-raised border border-border-crisp overflow-hidden">
+<summary class="flex items-center justify-between p-4 cursor-pointer list-none font-headline font-semibold text-xs text-text-primary select-none">
+<span>На каких условиях действует бесплатный тариф?</span>
+<span class="material-symbols-outlined text-[20px] text-text-secondary group-open:rotate-180 transition-transform duration-200">expand_more</span>
+</summary>
+<div class="px-4 pb-4 pt-1 font-body text-xs leading-relaxed text-text-secondary border-t border-border-subtle">
+            Бесплатный тариф действует на время пилота. Мы финансируем его за счёт расширенных семейных и корпоративных подписок.
+          </div>
+</details>
+<!-- Item 5 -->
+<details class="group rounded-xl bg-surface-raised border border-border-crisp overflow-hidden">
+<summary class="flex items-center justify-between p-4 cursor-pointer list-none font-headline font-semibold text-xs text-text-primary select-none">
+<span>Как настроить звонок, чтобы он звучал в режиме «Не беспокоить»?</span>
+<span class="material-symbols-outlined text-[20px] text-text-secondary group-open:rotate-180 transition-transform duration-200">expand_more</span>
+</summary>
+<div class="px-4 pb-4 pt-1 font-body text-xs leading-relaxed text-text-secondary border-t border-border-subtle">
+            Мы предоставляем постоянный номер оповещения, который вы можете добавить в список «Избранные контакты» на iOS или Android с опцией «Экстренный допуск». В этом случае телефон воспроизведет мелодию звонка даже при выключенном звуке.
+          </div>
+</details>
+</div>
+</section>
+<!-- 8. SECTION: ПОДКЛЮЧИТЬ БЕСПЛАТНОЕ ОПОВЕЩЕНИЕ ЗА 30 СЕКУНД -->
+<section class="px-4 py-8 border-t border-border-subtle bg-surface-container-low/60" id="register">
+<div class="p-5 rounded-2xl bg-surface-raised border border-border-crisp shadow-2xl relative overflow-hidden">
+<div class="flex flex-col text-center items-center mb-5">
+<span class="font-headline font-semibold text-[10px] text-status-active tracking-widest uppercase mb-1">ПОДКЛЮЧИТЬ СЕРВИС</span>
+<h2 class="font-headline font-bold text-xl text-text-primary">
+            Подключить бесплатное оповещение за 30 секунд
+          </h2>
+<p class="font-body text-xs text-text-secondary mt-1">
+            Введите номер телефона — мы отправим бесплатный код подтверждения в Telegram или SMS.
+          </p>
+</div>
+<form class="flex flex-col gap-3" id="connect-form" onsubmit="event.preventDefault(); document.getElementById('success-state').classList.remove('hidden'); document.getElementById('connect-form').classList.add('hidden');">
+<div class="flex flex-col gap-1">
+<label class="font-headline font-semibold text-[10px] text-text-secondary uppercase tracking-wider" for="phone-input">Номер телефона</label>
+<input class="w-full px-3.5 py-3 rounded-lg bg-surface-base border border-border-crisp text-text-primary placeholder:text-text-secondary/40 focus:border-status-active focus:ring-0 focus:outline-none font-headline font-semibold text-base transition-colors" id="phone-input" placeholder="+7 (___) ___-__-__" required="" type="tel"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-headline font-semibold text-[10px] text-text-secondary uppercase tracking-wider" for="hub-select">Домашний регион / Аэропорт</label>
+<div class="relative">
+<select class="w-full px-3.5 py-3 rounded-lg bg-surface-base border border-border-crisp text-text-primary appearance-none focus:border-status-active focus:ring-0 focus:outline-none font-body text-xs cursor-pointer pr-10" id="hub-select">
+<option value="moscow">Москва (SVO / DME / VKO)</option>
+<option value="spb">Санкт-Петербург (LED)</option>
+<option value="sochi">Сочи (AER)</option>
+<option value="kazan">Казань (KZN)</option>
+<option value="samara">Самара (KUF)</option>
+<option value="nn">Нижний Новгород (GOJ)</option>
+<option value="all">Все аэропорты России</option>
+</select>
+<span class="material-symbols-outlined text-text-secondary absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[18px]">expand_more</span>
+</div>
+</div>
+<label class="flex items-start gap-2.5 cursor-pointer mt-1">
+<input class="mt-0.5 accent-[#D4FF00] rounded cursor-pointer shrink-0" required="" type="checkbox"/>
+<span class="font-body text-[11px] text-text-secondary leading-snug">
+              Я согласен на обработку персональных данных и получение оперативных оповещений об ограничении работы аэропортов
+            </span>
+</label>
+<button class="w-full py-3.5 rounded-lg bg-status-active text-text-on-accent font-headline font-bold text-sm tracking-tight text-center shadow-[0_0_20px_rgba(212,255,0,0.25)] active:scale-[0.98] transition-all mt-1" type="submit">
+            Получить код
+          </button>
+<div class="flex items-center justify-center gap-1.5 text-text-secondary font-headline text-[10px] tracking-wider uppercase text-center mt-1">
+<span class="material-symbols-outlined text-[13px] text-status-active">lock</span>
+            Никакого спама. Только критические оповещения.
+          </div>
+</form>
+<div class="hidden flex flex-col items-center text-center p-4 gap-2" id="success-state">
+<div class="w-10 h-10 rounded-full bg-status-active/10 border border-status-active flex items-center justify-center text-status-active mb-1">
+<span class="material-symbols-outlined text-[20px]">check</span>
+</div>
+<h3 class="font-headline font-bold text-base text-text-primary">Проверочный код отправлен</h3>
+<p class="font-body text-xs text-text-secondary">
+            Мы выслали 4-значный код в Telegram и SMS для подтверждения телефонного шлюза.
+          </p>
+</div>
+</div>
+</section>
+<!-- 9. FOOTER -->
+<footer class="w-full bg-[#0E0E10] border-t border-border-crisp px-4 py-8 flex flex-col gap-6">
+<!-- Status Badge & Disclaimer -->
+<div class="flex flex-col gap-3">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-raised border border-border-crisp self-start">
+<span class="w-1.5 h-1.5 rounded-full bg-status-active animate-pulse"></span>
+<span class="font-headline font-semibold text-[10px] text-text-primary uppercase tracking-wider">Все серверы онлайн</span>
+</div>
+<p class="font-body text-xs leading-relaxed text-text-secondary">
+          Сервис «Безопасное Небо» является независимой системой гражданского информирования на базе открытых данных NOTAM и сообщений Росавиации. Не заменяет государственные каналы экстренного оповещения МЧС России.
+        </p>
+</div>
+<div class="h-px bg-border-subtle w-full"></div>
+<!-- Info Columns -->
+<div class="flex flex-col gap-5">
+<div class="flex flex-col gap-1">
+<span class="font-headline font-semibold text-xs text-text-primary uppercase tracking-wider">О системе</span>
+<p class="font-body text-xs text-text-secondary leading-relaxed">
+            Автоматизированная платформа экстренного информирования гражданской безопасности и мониторинга воздушной обстановки.
+          </p>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-headline font-semibold text-xs text-text-primary uppercase tracking-wider">Регламент</span>
+<p class="font-body text-xs text-text-secondary leading-relaxed">
+            Сигнализация уровня тревог формируется на базе верифицированных источников и открытых источников и регламентов оповещения.
+          </p>
+</div>
+<div class="flex flex-col gap-1.5">
+<span class="font-headline font-semibold text-xs text-text-primary uppercase tracking-wider">Правовая информация</span>
+<div class="flex flex-col gap-1 font-body text-xs text-text-secondary">
+<a class="hover:text-status-active transition-colors" href="#">Политика конфиденциальности</a>
+<a class="hover:text-status-active transition-colors" href="#">Пользовательское соглашение</a>
+</div>
+</div>
+</div>
+<div class="h-px bg-border-subtle w-full"></div>
+<!-- Bottom Bar -->
+<div class="flex flex-col gap-3 font-body text-xs text-text-secondary">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<div class="w-4 h-4 rounded bg-status-active flex items-center justify-center">
+<div class="w-1.5 h-1.5 rounded-full bg-text-on-accent"></div>
+</div>
+<span class="font-headline font-bold text-xs uppercase text-text-primary">Безопасное Небо</span>
+</div>
+<span class="font-headline text-[10px] text-text-secondary tracking-wider uppercase">SSL 256-Bit Encrypted</span>
+</div>
+<p class="text-[11px] text-text-secondary/70">
+          © 2026 Сервис оповещения «Безопасное Небо». Все права защищены.
+        </p>
+</div>
+</footer>
+</main>
+<!-- Interactive Scripts: WebGL Radar Animation & Phone Formatter -->
+<script>
+    // 1. Phone Input Mask
+    const phoneInput = document.getElementById('phone-input');
+    if (phoneInput) {
+      phoneInput.addEventListener('input', (e) => {
+        let val = e.target.value.replace(/\D/g, '');
+        if (!val) {
+          e.target.value = '';
+          return;
+        }
+        if (val[0] === '7' || val[0] === '8') val = val.substring(1);
+        let formatted = '+7 ';
+        if (val.length > 0) formatted += '(' + val.substring(0, 3);
+        if (val.length >= 4) formatted += ') ' + val.substring(3, 6);
+        if (val.length >= 7) formatted += '-' + val.substring(6, 8);
+        if (val.length >= 9) formatted += '-' + val.substring(8, 10);
+        e.target.value = formatted;
+      });
+    }
+
+    // 2. Embedded WebGL Radar Shader Canvas
+    (function initRadarShader() {
+      const canvas = document.getElementById('mobile-radar-canvas');
+      if (!canvas) return;
+
+      function syncSize() {
+        const w = canvas.parentElement.clientWidth || 358;
+        const h = canvas.parentElement.clientHeight || 280;
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width = w;
+          canvas.height = h;
+        }
+      }
+      syncSize();
+      window.addEventListener('resize', syncSize);
+
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (!gl) return;
+
+      const vs = `
+        attribute vec2 a_position;
+        varying vec2 v_texCoord;
+        void main() {
+          v_texCoord = a_position * 0.5 + 0.5;
+          gl_Position = vec4(a_position, 0.0, 1.0);
+        }
+      `;
+
+      const fs = `
+        precision highp float;
+        uniform float u_time;
+        uniform vec2 u_resolution;
+
+        void main() {
+          vec2 st = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / min(u_resolution.x, u_resolution.y);
+          float dist = length(st);
+          float angle = atan(st.y, st.x);
+
+          // Radar rotation sweep
+          float speed = 1.0;
+          float sweepAngle = mod(angle - u_time * speed, 6.28318530718);
+          float sweep = clamp(1.0 - sweepAngle / 4.5, 0.0, 1.0);
+          sweep = pow(sweep, 3.5);
+
+          // Concentric radar rings
+          float ring1 = abs(dist - 0.22);
+          float ring2 = abs(dist - 0.44);
+          float ring3 = abs(dist - 0.66);
+          float ring4 = abs(dist - 0.88);
+
+          float rings = smoothstep(0.006, 0.001, ring1) * 0.4 +
+                        smoothstep(0.006, 0.001, ring2) * 0.35 +
+                        smoothstep(0.006, 0.001, ring3) * 0.3 +
+                        smoothstep(0.006, 0.001, ring4) * 0.2;
+
+          // Crosshairs
+          float crosshair = smoothstep(0.003, 0.0, abs(st.x)) * smoothstep(0.9, 0.2, dist) * 0.15 +
+                            smoothstep(0.003, 0.0, abs(st.y)) * smoothstep(0.9, 0.2, dist) * 0.15;
+
+          // Airport hub coordinates
+          vec2 p1 = vec2(0.25, 0.18);
+          vec2 p2 = vec2(-0.32, 0.28);
+          vec2 p3 = vec2(0.12, -0.35);
+          vec2 p4 = vec2(-0.22, -0.22);
+          vec2 p5 = vec2(0.48, -0.15);
+
+          float blip1 = smoothstep(0.024, 0.002, length(st - p1)) * (0.6 + 0.4 * sin(u_time * 3.0));
+          float blip2 = smoothstep(0.024, 0.002, length(st - p2)) * (0.6 + 0.4 * sin(u_time * 2.5 + 1.0));
+          float blip3 = smoothstep(0.024, 0.002, length(st - p3)) * (0.6 + 0.4 * sin(u_time * 3.2 + 2.0));
+          float blip4 = smoothstep(0.024, 0.002, length(st - p4)) * (0.6 + 0.4 * sin(u_time * 2.8 + 3.0));
+          float blip5 = smoothstep(0.024, 0.002, length(st - p5)) * (0.6 + 0.4 * sin(u_time * 3.5 + 4.0));
+
+          // Expanding wave ripples from blips
+          float pulse1 = smoothstep(0.005, 0.0, abs(length(st - p1) - mod(u_time * 0.15, 0.15))) * (1.0 - mod(u_time * 0.15, 0.15) / 0.15) * 0.5;
+          float pulse2 = smoothstep(0.005, 0.0, abs(length(st - p2) - mod(u_time * 0.18 + 0.05, 0.18))) * (1.0 - mod(u_time * 0.18 + 0.05, 0.18) / 0.18) * 0.5;
+
+          float blips = blip1 + blip2 + blip3 + blip4 + blip5 + pulse1 + pulse2;
+
+          vec3 lime = vec3(0.831, 1.0, 0.0);       // #D4FF00
+          vec3 deepBg = vec3(0.039, 0.039, 0.043); // #0A0A0B
+
+          float mask = smoothstep(0.96, 0.82, dist);
+          float intensity = (sweep * 0.32 + rings + crosshair + blips * 1.5) * mask;
+
+          vec3 color = mix(deepBg, lime, clamp(intensity, 0.0, 1.0));
+          color += lime * 0.06 * sweep * mask;
+
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `;
+
+      function createShader(type, source) {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, source);
+        gl.compileShader(s);
+        return s;
+      }
+
+      const program = gl.createProgram();
+      gl.attachShader(program, createShader(gl.VERTEX_SHADER, vs));
+      gl.attachShader(program, createShader(gl.FRAGMENT_SHADER, fs));
+      gl.linkProgram(program);
+      gl.useProgram(program);
+
+      const buffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        -1, -1,
+         1, -1,
+        -1,  1,
+         1,  1
+      ]), gl.STATIC_DRAW);
+
+      const pos = gl.getAttribLocation(program, 'a_position');
+      gl.enableVertexAttribArray(pos);
+      gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+
+      const uTime = gl.getUniformLocation(program, 'u_time');
+      const uRes = gl.getUniformLocation(program, 'u_resolution');
+
+      let startTime = performance.now();
+      function render() {
+        syncSize();
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        const elapsed = (performance.now() - startTime) * 0.001;
+        if (uTime) gl.uniform1f(uTime, elapsed);
+        if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        requestAnimationFrame(render);
+      }
+      requestAnimationFrame(render);
+    })();
+  </script>
+</body></html>

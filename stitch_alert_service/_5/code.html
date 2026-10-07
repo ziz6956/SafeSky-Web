@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ru"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#0A0A0A;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com/3.4.17"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-secondary-fixed": "#1b1c1c", "primary-fixed-dim": "#b0d500", "surface-container-high": "#2a2a2a", "text-secondary": "#8A8A8A", "on-error": "#690005", "surface-container": "#201f1f", "text-on-accent": "#000000", "surface-tint": "#b0d500", "inverse-on-surface": "#313030", "surface-container-highest": "#353534", "on-primary-fixed": "#171e00", "outline-variant": "#444932", "on-surface-variant": "#c5c9ac", "on-primary-container": "#596c00", "on-surface": "#e5e2e1", "inverse-primary": "#536600", "text-primary": "#F5F5F5", "on-error-container": "#ffdad6", "on-tertiary-fixed": "#041e28", "tertiary-container": "#cde7f3", "secondary-container": "#474746", "tertiary-fixed-dim": "#b1cad7", "primary": "#ffffff", "on-primary-fixed-variant": "#3e4c00", "on-secondary-container": "#b6b5b4", "secondary-fixed-dim": "#c8c6c5", "border-subtle": "rgba(255, 255, 255, 0.08)", "surface-dim": "#131313", "on-tertiary-container": "#506873", "surface-container-lowest": "#0e0e0e", "status-alert": "#FF3B30", "surface-raised": "#141414", "on-tertiary": "#1b343d", "status-active": "#D4FF00", "surface-container-low": "#1c1b1b", "on-secondary": "#303030", "outline": "#8f9378", "primary-container": "#caf300", "surface-elevated": "#1E1E1E", "surface": "#131313", "on-background": "#e5e2e1", "primary-fixed": "#caf300", "inverse-surface": "#e5e2e1", "surface-bright": "#3a3939", "secondary": "#c8c6c5", "surface-base": "#0A0A0A", "tertiary-fixed": "#cde7f3", "surface-variant": "#353534", "on-secondary-fixed-variant": "#474746", "error-container": "#93000a", "background": "#131313", "on-primary": "#2a3400", "border-crisp": "#2A2A2A", "error": "#ffb4ab", "on-tertiary-fixed-variant": "#324a54", "secondary-fixed": "#e4e2e1", "tertiary": "#ffffff" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-md": "1rem", "margin-tablet": "2rem", "gutter": "1.5rem", "margin-mobile": "1.25rem", "space-xl": "2.5rem", "gutter-mobile": "1rem", "space-xs": "0.25rem", "space-sm": "0.5rem", "margin": "3rem", "space-lg": "1.5rem" }, "fontFamily": { "body-md": ["Inter"], "headline-xl-mobile": ["Space Grotesk"], "headline-lg": ["Space Grotesk"], "headline-md": ["Space Grotesk"], "label-sm": ["Space Grotesk"], "body-lg": ["Inter"], "label-md": ["Space Grotesk"], "headline-lg-mobile": ["Space Grotesk"], "headline-xl": ["Space Grotesk"], "title-md": ["Space Grotesk"] }, "fontSize": { "body-md": ["14px", { "lineHeight": "22px", "letterSpacing": "0", "fontWeight": "400" }], "headline-xl-mobile": ["36px", { "lineHeight": "42px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "headline-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "label-sm": ["10px", { "lineHeight": "14px", "letterSpacing": "0.1em", "fontWeight": "500" }], "body-lg": ["16px", { "lineHeight": "26px", "letterSpacing": "0", "fontWeight": "400" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "600" }], "headline-lg-mobile": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "headline-xl": ["56px", { "lineHeight": "64px", "letterSpacing": "-0.03em", "fontWeight": "700" }], "title-md": ["18px", { "lineHeight": "24px", "letterSpacing": "0", "fontWeight": "500" }] } } } }</script></head><body class="bg-surface-base font-body-md text-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 inset-x-0 z-50 bg-surface-base/80 backdrop-blur-xl pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.35)]"><div class="h-16 px-gutter-mobile flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="flex items-center justify-center w-8 h-8 rounded bg-surface-raised"><span class="material-symbols-outlined text-status-active text-[20px]">radar</span></div><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="font-title-md text-title-md font-bold tracking-tight text-status-active drop-shadow-[0_0_12px_rgba(212,255,0,0.3)]">SafeSky</span><span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-status-active opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-status-active"></span></span></div><span class="font-label-sm text-label-sm uppercase tracking-widest text-text-secondary">Безопасное Небо</span></div></div><div class="flex items-center gap-space-xs"><a class="min-w-[44px] min-h-[44px] flex items-center justify-center p-1" data-path="personal-cabinet" href="#"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></a></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-36 bg-surface-base"><div class="flex flex-col w-full px-gutter-mobile space-y-space-md pb-12">
+<!-- 1. Telemetry Bar -->
+<div class="w-full bg-surface-raised rounded-lg px-space-md py-2 flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="w-1.5 h-1.5 rounded-full bg-status-active animate-pulse shrink-0"></span>
+<span class="font-label-sm text-label-sm text-text-secondary truncate tracking-widest uppercase">
+        ШЛЮЗ: SS-GATE-0428 • СИНХРОНИЗАЦИЯ 100% • ПИНГ 14 МС
+      </span>
+</div>
+<span class="material-symbols-outlined text-status-active text-[16px] shrink-0">lock</span>
+</div>
+<!-- 2. Hero Success Status Block -->
+<div class="relative overflow-hidden bg-surface-raised rounded-xl p-space-lg shadow-md flex flex-col items-center text-center">
+<div class="absolute -top-12 -right-12 w-36 h-36 bg-status-active/5 rounded-full blur-2xl pointer-events-none"></div>
+<div class="absolute -bottom-10 -left-10 w-28 h-28 bg-status-active/5 rounded-full blur-xl pointer-events-none"></div>
+<!-- Animated Radar & Shield Halo -->
+<div class="relative flex items-center justify-center w-20 h-20 mb-space-md">
+<div class="absolute inset-0 rounded-full bg-status-active/10 animate-ping opacity-75"></div>
+<div class="absolute inset-1.5 rounded-full bg-surface-elevated flex items-center justify-center">
+<!-- SVG Radar Sweep Grid -->
+<svg class="absolute inset-0 w-full h-full text-status-active/20" viewbox="0 0 100 100">
+<circle cx="50" cy="50" fill="none" r="42" stroke="currentColor" stroke-dasharray="2,3" stroke-width="1"></circle>
+<circle cx="50" cy="50" fill="none" r="28" stroke="currentColor" stroke-width="1"></circle>
+<circle cx="50" cy="50" fill="none" r="14" stroke="currentColor" stroke-width="1"></circle>
+<line stroke="currentColor" stroke-width="0.8" x1="50" x2="50" y1="8" y2="92"></line>
+<line stroke="currentColor" stroke-width="0.8" x1="8" x2="92" y1="50" y2="50"></line>
+</svg>
+<span class="material-symbols-outlined text-status-active text-[30px] drop-shadow-[0_0_12px_rgba(212,255,0,0.45)]" style="font-variation-settings: 'FILL' 1;">
+          verified_user
+        </span>
+</div>
+</div>
+<!-- Badge -->
+<div class="inline-flex items-center gap-1.5 px-space-sm py-0.5 rounded-full bg-status-active/10 text-status-active mb-space-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-status-active"></span>
+<span class="font-label-sm text-label-sm tracking-wider uppercase">ТЕЛЕФОННЫЙ ШЛЮЗ АКТИВИРОВАН • В СЕТИ</span>
+</div>
+<!-- Title -->
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-text-primary mb-space-xs tracking-tight">
+      Безопасное Небо <span class="text-status-active drop-shadow-[0_0_12px_rgba(212,255,0,0.3)]">подключено</span>
+</h1>
+<!-- Subtitle -->
+<p class="font-body-md text-body-md text-text-secondary max-w-xs mb-space-md">
+      Номер успешно привязан к системе автоматического мониторинга. При фиксации ограничений в выбранных авиаузлах вы получите приоритетный голосовой звонок и сводный отчёт.
+    </p>
+<!-- Verified Badge Tile -->
+<div class="w-full bg-surface-elevated rounded-lg p-space-sm flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-status-active shrink-0">
+<span class="material-symbols-outlined text-[18px]">phone_in_talk</span>
+</div>
+<div class="flex flex-col text-left">
+<span class="font-title-md text-title-md text-text-primary font-semibold tracking-tight">+7 (999) 124-85-42</span>
+<span class="font-label-sm text-label-sm text-text-secondary uppercase">Класс А (Сверхвысокий приоритет)</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-status-active text-[20px] shrink-0" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<!-- 3. Connection Parameters Grid (2x2) -->
+<div class="grid grid-cols-2 gap-space-sm w-full">
+<!-- Card 1 -->
+<div class="bg-surface-raised rounded-xl p-space-md flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between mb-space-xs">
+<span class="font-label-sm text-label-sm text-text-secondary uppercase tracking-wider">Канал оповещения</span>
+<span class="material-symbols-outlined text-status-active text-[16px]">call</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-text-primary truncate font-semibold">+7 (999) 124-85-42</div>
+<div class="flex items-center gap-1 mt-1">
+<span class="w-1.5 h-1.5 rounded-full bg-status-active"></span>
+<span class="font-label-sm text-label-sm text-status-active font-medium">Активен</span>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-raised rounded-xl p-space-md flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between mb-space-xs">
+<span class="font-label-sm text-label-sm text-text-secondary uppercase tracking-wider">Зона контроля</span>
+<span class="material-symbols-outlined text-status-active text-[16px]">flight</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-text-primary font-semibold">Московский узел</div>
+<div class="font-label-sm text-label-sm text-text-secondary mt-1 truncate">SVO, DME, VKO, ZIA</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-raised rounded-xl p-space-md flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between mb-space-xs">
+<span class="font-label-sm text-label-sm text-text-secondary uppercase tracking-wider">Тариф</span>
+<span class="material-symbols-outlined text-status-active text-[16px]">verified</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-text-primary font-semibold">Базовый / Гражданский</div>
+<div class="font-label-sm text-label-sm text-status-active mt-1 font-medium">0 ₽/мес • 1 звонок/мес</div>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-surface-raised rounded-xl p-space-md flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between mb-space-xs">
+<span class="font-label-sm text-label-sm text-text-secondary uppercase tracking-wider">Скорость подачи</span>
+<span class="material-symbols-outlined text-status-active text-[16px]">speed</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-text-primary font-semibold">≤ 60 сек</div>
+<div class="font-label-sm text-label-sm text-status-active mt-1 font-medium">Прямой SIP-канал • цель, не гарантия</div>
+</div>
+</div>
+</div>
+<!-- 4. Critical Setting: Call Whitelist Card -->
+<div class="bg-surface-raised rounded-xl p-space-md shadow-md space-y-space-md">
+<div class="flex items-start gap-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-elevated flex items-center justify-center text-status-active shrink-0">
+<span class="material-symbols-outlined text-[22px]">ring_volume</span>
+</div>
+<div class="flex flex-col">
+<h2 class="font-title-md text-title-md text-text-primary font-semibold">Важная настройка: Белый список вызовов</h2>
+<p class="font-body-md text-body-md text-text-secondary mt-1">
+          Чтобы звонок робота прошёл ночью при включённом режиме «Не беспокоить», добавьте сервисный номер в избранное.
+        </p>
+</div>
+</div>
+<!-- Dispatcher Contact Pill -->
+<div class="bg-surface-elevated rounded-lg p-space-sm flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-text-secondary text-[20px]">headset_mic</span>
+<div class="flex flex-col truncate">
+<span class="font-label-sm text-label-sm text-text-secondary uppercase">Номер диспетчера</span>
+<span class="font-title-md text-title-md text-text-primary font-semibold tracking-tight">+7 (800) 555-01-92</span>
+</div>
+</div>
+<button class="bg-surface-container hover:bg-surface-bright text-text-primary font-label-md text-label-md px-space-sm py-1.5 rounded transition-colors shrink-0" onclick="navigator.clipboard?.writeText('+78005550192'); this.innerText='Скопировано!';" type="button">
+        Копировать
+      </button>
+</div>
+<!-- Download VCF Button -->
+<a class="w-full h-12 bg-primary hover:bg-surface-bright text-on-primary rounded font-title-md text-title-md font-semibold flex items-center justify-center gap-space-sm transition-all shadow-md active:scale-[0.99]" download="SafeSky_Dispatcher.vcf" href="data:text/vcard;charset=utf-8,BEGIN:VCARD%0AVERSION:3.0%0AN:Диспетчер;SafeSky;;;%0AFN:SafeSky Диспетчер%0ATEL;TYPE=VOICE,PREF:+78005550192%0AEND:VCARD">
+<span class="material-symbols-outlined text-[20px]">contact_page</span>
+<span>Сохранить контакт диспетчера (.VCF)</span>
+</a>
+<!-- Interactive Instruction Tabs -->
+<div class="bg-surface-elevated rounded-lg p-space-sm">
+<div class="flex rounded bg-surface-raised p-0.5 mb-space-sm" id="os-tabs">
+<button class="flex-1 py-1.5 text-center font-label-md text-label-md rounded bg-surface-elevated text-status-active transition-all font-semibold" id="tab-btn-ios" onclick="switchTab('ios')" type="button">
+          Apple iOS
+        </button>
+<button class="flex-1 py-1.5 text-center font-label-md text-label-md rounded text-text-secondary transition-all font-semibold" id="tab-btn-android" onclick="switchTab('android')" type="button">
+          Android
+        </button>
+</div>
+<!-- iOS content -->
+<div class="space-y-2 text-text-secondary font-body-md text-body-md" id="tab-content-ios">
+<div class="flex items-start gap-2">
+<span class="w-5 h-5 rounded-full bg-surface-raised text-status-active font-label-sm text-label-sm flex items-center justify-center shrink-0">1</span>
+<span>Нажмите «Сохранить контакт» выше и откройте карточку в телефоне.</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="w-5 h-5 rounded-full bg-surface-raised text-status-active font-label-sm text-label-sm flex items-center justify-center shrink-0">2</span>
+<span>В настройках звонка включите <strong class="text-text-primary">«Форсированный экстренный допуск»</strong> для звонков в беззвучном режиме.</span>
+</div>
+</div>
+<!-- Android content (hidden by default) -->
+<div class="space-y-2 text-text-secondary font-body-md text-body-md hidden" id="tab-content-android">
+<div class="flex items-start gap-2">
+<span class="w-5 h-5 rounded-full bg-surface-raised text-status-active font-label-sm text-label-sm flex items-center justify-center shrink-0">1</span>
+<span>Сохраните номер диспетчера в контакты вашего устройства.</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="w-5 h-5 rounded-full bg-surface-raised text-status-active font-label-sm text-label-sm flex items-center justify-center shrink-0">2</span>
+<span>Отметьте контакт значком <strong class="text-text-primary">«Звёздочка / Избранное»</strong>.</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="w-5 h-5 rounded-full bg-surface-raised text-status-active font-label-sm text-label-sm flex items-center justify-center shrink-0">3</span>
+<span>В меню «Не беспокоить» разрешите вызовы от избранных контактов.</span>
+</div>
+</div>
+</div>
+</div>
+<!-- 5. Live Test Diagnostic Widget -->
+<div class="bg-surface-raised rounded-xl p-space-md shadow-md space-y-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-status-active text-[20px]">sensors</span>
+<h3 class="font-title-md text-title-md text-text-primary font-semibold">Проверить канал связи прямо сейчас</h3>
+</div>
+<span class="px-space-xs py-0.5 rounded bg-status-active/15 text-status-active font-label-sm text-label-sm uppercase font-bold tracking-wider">
+        ТЕСТ
+      </span>
+</div>
+<p class="font-body-md text-body-md text-text-secondary">
+      Робот-диспетчер перезвонит через 5 секунд и спокойным голосом продиктует актуальную обстановку.
+    </p>
+<button class="w-full h-11 bg-surface-elevated hover:bg-surface-container active:scale-[0.99] rounded font-title-md text-title-md text-text-primary flex items-center justify-center gap-space-sm transition-all shadow-sm" id="test-call-btn" onclick="handleTestCall(this)" type="button">
+<span class="material-symbols-outlined text-status-active text-[18px]">phone_callback</span>
+<span id="test-call-label">Заказать тестовый звонок</span>
+<span class="font-label-sm text-label-sm text-text-secondary ml-1">(1 бесплатно)</span>
+</button>
+</div>
+<!-- 6. Backup Telegram Channel -->
+<div class="bg-surface-raised rounded-xl p-space-md shadow-md flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-10 h-10 rounded-lg bg-surface-elevated flex items-center justify-center text-status-active shrink-0">
+<span class="material-symbols-outlined text-[22px]">send</span>
+</div>
+<div class="flex flex-col truncate">
+<div class="flex items-center gap-1.5">
+<span class="font-label-md text-label-md text-text-primary font-semibold">Резервный Telegram-бот</span>
+<span class="w-1.5 h-1.5 rounded-full bg-status-active"></span>
+</div>
+<span class="font-label-sm text-label-sm text-text-secondary truncate">@SafeSkyBot • Текстовые дубликаты</span>
+</div>
+</div>
+<a class="bg-surface-container hover:bg-surface-bright text-text-primary font-label-md text-label-md px-space-sm py-2 rounded transition-colors shrink-0 flex items-center gap-1" href="https://t.me/" target="_blank">
+<span>Подключить</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</div>
+<!-- 7. Final Action Button (Neon Primary) -->
+<div class="pt-space-xs">
+<a class="w-full h-14 bg-status-active hover:bg-[#C3EB00] text-text-on-accent rounded font-headline-md text-title-md font-bold flex items-center justify-center gap-space-sm transition-all shadow-[0_0_24px_rgba(212,255,0,0.25)] active:scale-[0.99]" data-path="personal-cabinet" href="#">
+<span>Перейти в личный кабинет</span>
+<span class="material-symbols-outlined text-[22px]">east</span>
+</a>
+<div class="flex items-center justify-center gap-1.5 mt-space-sm text-text-secondary">
+<span class="material-symbols-outlined text-[14px] text-status-active">format_image_left</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Мониторинг активен • SafeSky Core v4.2</span>
+</div>
+</div>
+</div>
+<script>
+  function switchTab(os) {
+    const btnIos = document.getElementById('tab-btn-ios');
+    const btnAnd = document.getElementById('tab-btn-android');
+    const contentIos = document.getElementById('tab-content-ios');
+    const contentAnd = document.getElementById('tab-content-android');
+    if (!btnIos || !btnAnd || !contentIos || !contentAnd) return;
+
+    if (os === 'ios') {
+      btnIos.className = 'flex-1 py-1.5 text-center font-label-md text-label-md rounded bg-surface-elevated text-status-active transition-all font-semibold';
+      btnAnd.className = 'flex-1 py-1.5 text-center font-label-md text-label-md rounded text-text-secondary transition-all font-semibold';
+      contentIos.classList.remove('hidden');
+      contentAnd.classList.add('hidden');
+    } else {
+      btnAnd.className = 'flex-1 py-1.5 text-center font-label-md text-label-md rounded bg-surface-elevated text-status-active transition-all font-semibold';
+      btnIos.className = 'flex-1 py-1.5 text-center font-label-md text-label-md rounded text-text-secondary transition-all font-semibold';
+      contentAnd.classList.remove('hidden');
+      contentIos.classList.add('hidden');
+    }
+  }
+
+  function handleTestCall(btn) {
+    const label = document.getElementById('test-call-label');
+    if (!label) return;
+    btn.disabled = true;
+    btn.classList.add('opacity-80', 'cursor-not-allowed');
+    let countdown = 5;
+    label.innerText = `Дозваниваемся... (${countdown}с)`;
+    const timer = setInterval(() => {
+      countdown--;
+      if (countdown > 0) {
+        label.innerText = `Дозваниваемся... (${countdown}с)`;
+      } else {
+        clearInterval(timer);
+        label.innerText = 'Вызов инициирован! Ожидайте звонка';
+        btn.classList.add('text-status-active');
+      }
+    }, 1000);
+  }
+</script></main><footer class="fixed bottom-16 inset-x-0 z-40 bg-surface-base/90 backdrop-blur-xl px-gutter-mobile py-space-xs flex items-center justify-between text-text-secondary"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[12px] text-status-active">lock</span><span class="font-label-sm text-label-sm">SSL 256-BIT ENCRYPTED</span></div><span class="font-label-sm text-label-sm">СИСТЕМА ГРАЖДАНСКОГО ОПОВЕЩЕНИЯ</span></footer><nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-surface-raised/95 backdrop-blur-xl shadow-[0_-2px_12px_rgba(0,0,0,0.4)]" data-active-classes="text-status-active"><div class="flex justify-around items-center h-16 px-space-xs"><a class="flex flex-col items-center justify-center gap-0.5 min-w-[44px] min-h-[44px] text-text-secondary transition-colors" data-path="airspace-map" href="#"><span class="material-symbols-outlined text-[20px]">radar</span><span class="font-label-sm text-label-sm">Монитор</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[44px] min-h-[44px] text-text-secondary transition-colors" data-path="live-telemetry" href="#"><span class="material-symbols-outlined text-[20px]">sensors</span><span class="font-label-sm text-label-sm">Телеметрия</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[44px] min-h-[44px] text-text-secondary transition-colors" data-path="incident-reports" href="#"><span class="material-symbols-outlined text-[20px]">warning</span><span class="font-label-sm text-label-sm">Сводка</span></a><a aria-current="page" class="flex flex-col items-center justify-center gap-0.5 min-w-[44px] min-h-[44px] transition-colors text-status-active" data-path="personal-cabinet" href="#"><span class="material-symbols-outlined text-[20px]">shield</span><span class="font-label-sm text-label-sm">Кабинет</span></a></div></nav></body></html>
