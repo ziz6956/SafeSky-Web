@@ -6,6 +6,9 @@ const BASE = 'http://127.0.0.1:8931';
 const PAGES = ['index.html', 'lk.html', 'legal.html', 'code.html', 'connected.html', 'shader.html'];
 // shader.html — canvas без текстовых узлов: семейства не загружаются, проверка шрифтов не применима.
 const SKIP_FONTS = new Set(['shader.html']);
+// На 127.0.0.1 страница локальная → боевой режим → fetch на localhost:3000 (нет бэкенда).
+// На Pages страница НЕ локальная и демо включается сам — ?demo=1 воспроизводит опубликованное поведение.
+const DEMO_PAGES = new Set(['code.html', 'lk.html']);
 
 const browser = await chromium.launch({ args: ['--no-sandbox', '--disable-gpu'] });
 let failures = 0;
@@ -19,7 +22,7 @@ for (const name of PAGES) {
   page.on('response', r => {
     if (r.status() >= 400) badResponses.push(`${r.status()} ${r.url()}`);
   });
-  await page.goto(`${BASE}/${name}`, { waitUntil: 'networkidle', timeout: 30000 });
+  await page.goto(`${BASE}/${name}${DEMO_PAGES.has(name) ? '?demo=1' : ''}`, { waitUntil: 'networkidle', timeout: 30000 });
   await page.waitForTimeout(500);
 
   const ext = await page.evaluate(() =>
