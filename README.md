@@ -34,6 +34,22 @@
 - Статические HTML-страницы, Tailwind CSS 3.4.x через CDN (версия зафиксирована).
 - Шрифты: Inter, Space Grotesk, Material Symbols Outlined (Google Fonts).
 
+## Бэкенд и Render (SAF-206/SAF-219)
+
+Бэкенд SMS-авторизации — в `backend/` (Node 20 + Express + Prisma). Деплой: Render
+(Web Service, Docker, регион frankfurt, план free) + Render Postgres (free).
+
+- `render.yaml` — Blueprint/IaC целевого состояния контура. Секреты в репозиторий
+  не кладут: имена env без значений, `JWT_SECRET` генерирует Render
+  (`generateValue: true`), реальные значения — на Render (dashboard/API).
+- Прод-URL: https://safesky-web.onrender.com (проверка: `GET /health` → 200).
+- Env сервиса (имена): `DATABASE_URL`, `JWT_SECRET`, `CORS_ORIGINS`,
+  `NODE_ENV=production`, `SMS_PROVIDER=console`, заглушки `EXOLVE_API_KEY`,
+  `EXOLVE_SENDER`, `TELEGRAM_BOT_TOKEN` (кодом не используется).
+- Free Postgres Render живёт 30 дней с момента создания — до пилота БД
+  переносится на РФ-VPS (SAF-86) сменой `DATABASE_URL` без изменений кода.
+- Локальный запуск бэкенда — `backend/README.md`.
+
 ## Публикация
 
 GitHub Pages на ветке `main`, корень репозитория. Страницы обновляются

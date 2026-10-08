@@ -2,8 +2,10 @@
 
 Рабочий контур авторизации по телефону (SAF-206, одобрено основателем 07.10 17:51Z).
 
-**Схема:** GitHub Pages (фронт) ➡️ Render (бэк) ➡️ Supabase PostgreSQL (БД).
+**Схема:** GitHub Pages (фронт) ➡️ Render (бэк) ➡️ Render Postgres, план free (БД).
 Бэкенд лежит в `backend/`, чтобы не ломать GitHub Pages в корне репозитория.
+Free Postgres Render живёт 30 дней (expiresAt в dashboard) — до пилота БД переносится
+на РФ-VPS (SAF-86) сменой `DATABASE_URL` без изменений кода.
 
 **Стек:** Node.js 20 + Express 4 + TypeScript + Prisma 5 + PostgreSQL.
 Prisma обязателен по постановке: перенос БД на РФ-VPS (SAF-86) — сменой `DATABASE_URL`.

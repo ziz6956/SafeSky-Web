@@ -1,0 +1,47 @@
+# SafeSky-Web — Render Blueprint (IaC), SAF-219.
+# Целевое состояние прод-контура: Web Service (backend) + Postgres.
+#
+# Секреты сюда НЕ кладут: имена без значений, JWT_SECRET генерирует Render.
+# Реальные значения env задаются на Render (dashboard/API), в GitHub не попадают.
+#
+# ВАЖНО: до мержа PR #3 (backend появится в main) сервис работает на ветке
+# feature/stitch-design-update; после мержа — PATCH branch → main (SAF-219).
+
+services:
+  - type: web
+    name: safesky-web
+    runtime: docker
+    plan: free
+    region: frankfurt
+    rootDir: backend
+    branch: main            # до мержа PR #3 живёт сервис на feature/stitch-design-update
+    healthCheckPath: /health
+    autoDeploy: yes         # в API-модели — autoDeployTrigger: commit
+    envVars:
+      # --- Секреты: значения только на Render (dashboard/API) ---
+      - key: DATABASE_URL
+        fromDatabase:
+          name: safesky-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: EXOLVE_API_KEY
+        sync: false
+      - key: EXOLVE_SENDER
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      # --- Конфиг (не секреты), фиксирован постановкой SAF-206/SAF-219 ---
+      - key: CORS_ORIGINS
+        value: https://ziz6956.github.io
+      - key: SMS_PROVIDER
+        value: console
+      - key: NODE_ENV
+        value: production
+
+databases:
+  - name: safesky-db
+    plan: free
+    region: frankfurt
+    databaseName: safesky
+    user: safesky
