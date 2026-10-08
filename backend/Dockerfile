@@ -18,6 +18,10 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 
+# Prisma на alpine: libssl нужен, иначе движок не определяет openssl
+# (warn «Prisma failed to detect the libssl/openssl version»).
+RUN apk add --no-cache openssl
+
 # prisma CLI — в dependencies (а не devDependencies) намеренно:
 # контейнер сам накатывает миграции при старте (prisma migrate deploy).
 COPY package*.json ./
@@ -25,6 +29,11 @@ RUN npm ci --omit=dev
 COPY prisma ./prisma
 RUN npx prisma generate
 COPY --from=build /app/dist ./dist
+
+# SAF-219: при старте `prisma migrate deploy` пишет в node_modules/@prisma/engines —
+# каталог создан от root при сборке, поэтому отдаём его непривилегированному
+# пользователю (иначе Render update_failed: «Can't write to /app/node_modules/@prisma/engines»).
+RUN chown -R node:node /app
 
 # Непривилегированный пользователь.
 USER node
