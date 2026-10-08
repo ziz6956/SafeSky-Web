@@ -1,0 +1,206 @@
+/* SafeSky-Web — общий слой адаптивности (SAF-207, UX/UI).
+   Реализует чек-лист основателя: контейнер 1200px / паддинг 15px,
+   медиа-запросы на 375 / 768 / 1200, отсутствие горизонтального скролла.
+   Подключается ПОСЛЕ Tailwind CDN. Классы .sk-* не дублируют утилиты Tailwind
+   на тех же элементах, поэтому конфликтов каскада нет. */
+
+:root {
+  --sk-gutter: 1.5rem;        /* боковой отступ оболочки, десктоп */
+  --sk-header-h: 5rem;        /* высота шапки, десктоп */
+  --sk-container-max: 1200px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+/* --- Контейнер: точная формула из чек-листа --- */
+.sk-container {
+  width: 100%;
+  max-width: var(--sk-container-max);
+  margin: 0 auto;
+  padding: 0 15px;
+  box-sizing: border-box;
+}
+
+/* флекс/грид-дети не расширяют контейнер своим min-content */
+.sk-container > * {
+  min-width: 0;
+}
+
+/* --- Оболочка шапки: высота и боковые отступы по брейкпоинтам --- */
+.sk-shell {
+  width: 100%;
+  height: var(--sk-header-h);
+  padding-left: var(--sk-gutter);
+  padding-right: var(--sk-gutter);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* --- Отступ под фиксированную шапку: следует за её высотой --- */
+.sk-below-header {
+  padding-top: var(--sk-header-h);
+}
+
+/* Компактная шапка правовых страниц: фиксированные 3.5rem на всех ширинах
+   (совпадает с pt-14 у main). Идёт после .sk-shell — та же специфичность,
+   поэтому переопределяет высоту по порядку в файле. */
+.sk-shell--slim {
+  height: 3.5rem;
+}
+
+/* --- Текст, который не должен расширять контейнер --- */
+.sk-safe {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* --- Декор с трансформацией (вращение) не создаёт прокрутку --- */
+.sk-clip {
+  overflow: hidden;
+}
+
+/* --- Типографика, ведомая брейкпоинтами --- */
+.sk-h1 {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 56px;
+  line-height: 64px;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+}
+
+.sk-h2 {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 24px;
+  line-height: 32px;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+
+.sk-h-lg {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 40px;
+  line-height: 48px;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+/* --- Брейкпоинты чек-листа --- */
+@media (max-width: 1200px) {
+  :root {
+    --sk-gutter: 1.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --sk-gutter: 1rem;
+    --sk-header-h: 4rem;
+  }
+
+  .sk-h1 {
+    font-size: 40px;
+    line-height: 46px;
+    letter-spacing: -0.02em;
+  }
+
+  .sk-h2 {
+    font-size: 22px;
+    line-height: 30px;
+  }
+
+  .sk-h-lg {
+    font-size: 30px;
+    line-height: 36px;
+  }
+}
+
+@media (max-width: 375px) {
+  :root {
+    --sk-gutter: 0.75rem;
+    --sk-header-h: 3.5rem;
+  }
+
+  .sk-h1 {
+    font-size: 30px;
+    line-height: 36px;
+    letter-spacing: -0.01em;
+  }
+
+  .sk-h2 {
+    font-size: 20px;
+    line-height: 28px;
+  }
+
+  .sk-h-lg {
+    font-size: 24px;
+    line-height: 30px;
+  }
+}
+
+/* --- Экран кода: ячейка ввода OTP --- */
+.sk-otp-cell {
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 0;
+  height: 3.5rem;
+  text-align: center;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  border-radius: 0.25rem;
+  border: 1px solid #2a2a2a;
+  background: #141414;
+  color: #f5f5f5;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+  appearance: none;
+}
+
+.sk-otp-cell::placeholder {
+  color: #8a8a8a;
+}
+
+.sk-otp-cell:focus {
+  outline: none;
+  border-color: #d4ff00;
+  box-shadow: 0 0 0 1px rgba(212, 255, 0, 0.35), 0 0 16px rgba(212, 255, 0, 0.18);
+}
+
+.sk-otp-cell[aria-invalid="true"] {
+  border-color: #ff3b30;
+}
+
+.sk-otp-cell:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 375px) {
+  .sk-otp-cell {
+    height: 3rem;
+    font-size: 20px;
+  }
+}
+
+/* --- Служебное: скрытие по состоянию, если нет Tailwind --- */
+.sk-hidden {
+  display: none !important;
+}

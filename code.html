@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ru"><head><link href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23D4FF00'/%3E%3Ccircle cx='12' cy='12' r='4' fill='%23000'/%3E%3C/svg%3E" rel="icon"/><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><title>Безопасное Небо — подтверждение номера</title><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><link href="fonts.css" rel="stylesheet"/><link href="tailwind.css" rel="stylesheet"/><link href="styles.css" rel="stylesheet"/><script src="config.js"></script><script src="js/api.js"></script></head>
+<body class="bg-surface-base text-text-primary font-body-md text-body-md antialiased"><header class="fixed top-0 w-full z-50 bg-surface-base/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+<div class="sk-shell">
+<a class="flex items-center gap-space-sm min-w-0" href="index.html" data-path="landing">
+<div class="w-7 h-7 bg-status-active rounded flex items-center justify-center shrink-0"><div class="w-2.5 h-2.5 bg-text-on-accent rounded-full"></div></div>
+<span class="font-title-md text-title-md text-text-primary tracking-wider uppercase font-semibold leading-none truncate">Безопасное Небо</span>
+</a>
+<div class="flex items-center gap-space-sm shrink-0">
+<div class="hidden md:flex items-center gap-space-xs px-space-sm py-space-xs rounded-full bg-surface-container-low">
+<div class="w-2 h-2 rounded-full bg-status-active animate-pulse"></div>
+<span class="font-label-sm text-label-sm text-status-active tracking-wider uppercase">Подтверждение номера</span>
+</div>
+<a class="px-space-sm sm:px-space-md py-space-sm rounded-lg border border-border-crisp text-text-secondary hover:text-text-primary hover:border-text-secondary/40 font-label-md text-label-md uppercase tracking-wider transition-colors whitespace-nowrap" href="index.html">Назад</a>
+</div>
+</div>
+</header>
+<main class="w-full bg-surface-base sk-below-header">
+  <div class="flex flex-col w-full text-text-primary">
+    <!-- ЭКРАН ВВОДА КОДА ИЗ SMS -->
+    <section class="relative w-full py-space-xl flex flex-col items-center sk-clip" id="code">
+      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[720px] h-[360px] bg-status-active/5 rounded-full blur-[140px] pointer-events-none"></div>
+
+      <div class="sk-container flex flex-col items-center relative z-10">
+        <div class="w-full max-w-2xl flex flex-col gap-space-md">
+
+          <!-- Прогресс шагов -->
+          <div class="w-full flex items-center gap-space-xs" aria-hidden="true">
+            <div class="flex-1 h-0.5 rounded-full bg-status-active"></div>
+            <div class="flex-1 h-0.5 rounded-full bg-status-active"></div>
+            <div class="flex-1 h-0.5 rounded-full bg-border-crisp"></div>
+          </div>
+
+          <!-- Карточка -->
+          <div class="w-full p-space-md sm:p-space-xl rounded-2xl bg-surface-base border border-border-crisp shadow-2xl relative overflow-hidden backdrop-blur-xl">
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-status-active/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <!-- Состояние: ввод кода -->
+            <div class="flex flex-col gap-space-md relative z-10" id="code-step">
+              <div class="flex flex-col gap-space-xs text-center items-center">
+                <span class="font-label-sm text-label-sm text-status-active tracking-widest uppercase">Шаг 2 из 3 · Подтверждение номера</span>
+                <h1 class="sk-h2 text-text-primary">Введите код из SMS</h1>
+                <p class="font-body-md text-body-md text-text-secondary sk-safe max-w-md">
+                  Мы отправили 6-значный код на номер
+                  <span class="text-text-primary font-medium tabular-nums whitespace-nowrap" id="phone-display">+7 (999) 123-45-67</span>.
+                </p>
+                <button class="font-label-md text-label-md text-text-secondary hover:text-status-active uppercase tracking-wider transition-colors mt-space-xs" id="change-phone" type="button">
+                  Изменить номер
+                </button>
+              </div>
+
+              <!-- Баннер состояния (ошибка / статус) -->
+              <div class="flex items-start gap-space-sm p-space-md rounded border border-status-alert/50 bg-status-alert/10 hidden" id="code-alert" role="alert" aria-live="assertive">
+                <span class="material-symbols-outlined text-status-alert text-[20px] shrink-0" id="code-alert-icon">error</span>
+                <span class="font-body-md text-body-md text-text-primary sk-safe" id="code-alert-text"></span>
+              </div>
+
+              <form class="flex flex-col gap-space-md" id="code-form" novalidate>
+                <span class="font-label-md text-label-md text-text-secondary uppercase tracking-wider text-center" id="otp-label">Код из 6 цифр</span>
+
+                <div class="flex items-center gap-space-xs sm:gap-space-sm w-full" id="otp-group" role="group" aria-labelledby="otp-label">
+                  <input aria-label="Цифра 1" autocomplete="one-time-code" class="sk-otp-cell" inputmode="numeric" maxlength="1" type="text"/>
+                  <input aria-label="Цифра 2" autocomplete="off" class="sk-otp-cell" inputmode="numeric" maxlength="1" type="text"/>
+                  <input aria-label="Цифра 3" autocomplete="off" class="sk-otp-cell" inputmode="numeric" maxlength="1" type="text"/>
+                  <input aria-label="Цифра 4" autocomplete="off" class="sk-otp-cell" inputmode="numeric" maxlength="1" type="text"/>
+                  <input aria-label="Цифра 5" autocomplete="off" class="sk-otp-cell" inputmode="numeric" maxlength="1" type="text"/>
+                  <input aria-label="Цифра 6" autocomplete="off" class="sk-otp-cell" inputmode="numeric" maxlength="1" type="text"/>
+                </div>
+
+                <div class="flex flex-col gap-space-xs">
+                  <p class="font-body-md text-body-md text-text-secondary text-center" id="otp-hint">Код действует 5 минут.</p>
+                  <div class="flex flex-col sm:flex-row items-center justify-center gap-space-xs text-center">
+                    <span class="font-body-md text-body-md text-text-secondary tabular-nums" id="resend-timer">Отправить код ещё раз можно через 30 секунд.</span>
+                    <button class="font-body-md text-body-md text-status-active font-medium underline decoration-status-active/40 underline-offset-4 hover:decoration-status-active transition-colors hidden" id="resend-btn" type="button">
+                      Отправить код ещё раз
+                    </button>
+                  </div>
+                </div>
+
+                <button class="w-full py-4 rounded bg-status-active text-text-on-accent font-title-md text-title-md font-semibold tracking-tight shadow-[0_0_24px_rgba(212,255,0,0.25)] hover:bg-primary-fixed-dim hover:shadow-[0_0_32px_rgba(212,255,0,0.35)] transition-all disabled:bg-surface-elevated disabled:text-text-secondary disabled:shadow-none disabled:cursor-not-allowed" id="submit-btn" type="submit">
+                  Подтвердить
+                </button>
+              </form>
+
+              <div class="flex items-start justify-center gap-space-xs text-text-secondary font-label-sm text-label-sm tracking-wider uppercase text-center">
+                <span class="material-symbols-outlined text-[14px] text-status-active shrink-0">info</span>
+                <span class="sk-safe" id="mode-note">Демо-режим: SMS не отправляется, номер никуда не передаётся и не сохраняется.</span>
+              </div>
+            </div>
+
+            <!-- Состояние: успех -->
+            <div class="flex-col items-center text-center p-space-md gap-space-sm hidden" id="success-state">
+              <div class="w-12 h-12 rounded-[9999px] bg-status-active/10 border border-status-active flex items-center justify-center text-status-active mb-space-xs">
+                <span class="material-symbols-outlined text-[24px]">check</span>
+              </div>
+              <h2 class="font-title-md text-title-md text-text-primary font-semibold">Готово. Учётная запись создана</h2>
+              <p class="font-body-md text-body-md text-text-secondary max-w-sm">Мы подтвердили ваш номер. Личный кабинет уже открыт.</p>
+              <a class="w-full sm:w-auto px-8 py-4 rounded bg-status-active text-text-on-accent font-title-md text-title-md font-semibold tracking-tight shadow-[0_0_24px_rgba(212,255,0,0.25)] hover:bg-primary-fixed-dim transition-all text-center" href="lk.html">
+                Открыть личный кабинет
+              </a>
+            </div>
+          </div>
+
+          <!-- Справка: шаблон SMS -->
+          <div class="w-full p-space-md rounded border border-border-crisp bg-surface-raised/60 flex flex-col gap-space-xs">
+            <span class="font-label-sm text-label-sm text-text-secondary uppercase tracking-wider">Шаблон SMS</span>
+            <p class="font-body-md text-body-md text-text-primary tabular-nums">SafeSky: ваш код — XXXXXX. Никому не сообщайте.</p>
+            <span class="font-label-sm text-label-sm text-text-secondary">В прототипе сообщение не отправляется. Тестовый код: 123456.</span>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+<footer class="w-full bg-surface-container-lowest mt-margin"><div class="w-full px-gutter py-space-xl flex flex-col gap-space-lg"><div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-space-md"><div class="flex items-center gap-space-sm"><div class="w-6 h-6 bg-status-active rounded flex items-center justify-center"><div class="w-2 h-2 bg-text-on-accent rounded-full"></div></div><span class="font-title-md text-title-md text-text-primary tracking-wider uppercase font-semibold">Безопасное Небо</span></div><div class="flex items-center gap-space-xs px-space-sm py-space-xs rounded bg-surface-container-low"><div class="w-2 h-2 rounded-full bg-status-active"></div><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Защищённый шлюз оповещения</span></div></div><div class="w-full h-px bg-border-subtle"></div><div class="grid grid-cols-1 md:grid-cols-3 gap-space-lg"><div class="flex flex-col gap-space-xs"><span class="font-label-md text-label-md text-text-primary uppercase tracking-wider">О системе</span><p class="font-body-md text-body-md text-text-secondary">Автоматизированная платформа экстренного информирования гражданской безопасности и мониторинга воздушной обстановки.</p></div><div class="flex flex-col gap-space-xs"><span class="font-label-md text-label-md text-text-primary uppercase tracking-wider">Регламент</span><p class="font-body-md text-body-md text-text-secondary">Сигнализация уровня тревог формируется на базе верифицированных источников и открытых источников и регламентов оповещения.</p></div><div class="flex flex-col gap-space-xs"><span class="font-label-md text-label-md text-text-primary uppercase tracking-wider">Правовая информация</span><div class="flex flex-col gap-space-xs"><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="politika-konfidencialnosti" href="legal.html">Политика конфиденциальности</a><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="polzovatelskoe-soglashenie" href="legal.html">Пользовательское соглашение</a></div></div></div><div class="w-full h-px bg-border-subtle"></div><div class="flex flex-col md:flex-row justify-between items-center gap-space-md text-text-secondary font-body-md text-body-md"><p>© 2026 Сервис оповещения «Безопасное Небо». Все права защищены.</p><div class="flex items-center gap-space-xs"><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">SSL 256-Bit Encrypted</span></div></div></div></footer>
+<script>
+/* Экран подтверждения номера (SAF-207). Демо-режим, пока API_BASE_URL пуст;
+   при заполненном config.js все вызовы идут через бэкенд SAF-206. */
+(function () {
+  /* Клиент бэкенда — js/api.js (SAF-206).
+     Демо-режим только когда боевого бэкенда заведомо нет:
+       • клиент не подключён, или API_BASE_URL пуст;
+       • либо адрес ведёт на localhost, а сама страница открыта НЕ с localhost
+         (опубликованный прототип со страницы GitHub Pages до локального
+         докера не достучится).
+     Обратное неверно: при боевом URL демо не включается никогда — иначе
+     прототип принимал бы код 123456 вместо проверки на сервере.
+     Явно: ?demo=1 / ?demo=0. */
+  const Api = window.SafeSkyApi || null;
+  const CFG = window.SafeSkyConfig || {};
+  const base = String(CFG.API_BASE_URL || '');
+  const host = window.location.hostname;
+  const pageIsLocal = host === 'localhost' || host === '127.0.0.1' || host === '';
+  const baseIsLocal = /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(base);
+  const demoParam = new URLSearchParams(window.location.search).get('demo');
+  const DEMO = demoParam === '1' ? true
+    : demoParam === '0' ? false
+    : (!Api || !base || (baseIsLocal && !pageIsLocal));
+  const DEMO_CODE = '123456';
+  const MAX_ATTEMPTS = Number(CFG.SMS_ATTEMPTS_MAX) || 3;
+  const RESEND_SEC = Number(CFG.SMS_RESEND_SECONDS) || 30;
+
+  const $ = (id) => document.getElementById(id);
+  const cells = Array.from(document.querySelectorAll('.sk-otp-cell'));
+  const form = $('code-form');
+  const submitBtn = $('submit-btn');
+  const alertBox = $('code-alert');
+  const alertText = $('code-alert-text');
+  const alertIcon = $('code-alert-icon');
+  const timerEl = $('resend-timer');
+  const resendBtn = $('resend-btn');
+  const stepEl = $('code-step');
+  const successEl = $('success-state');
+  const phoneEl = $('phone-display');
+
+  const st = { phone: demoPhone(), attemptsLeft: MAX_ATTEMPTS, cooldown: 0, busy: false, blocked: false };
+
+  function demoPhone() {
+    try {
+      return sessionStorage.getItem('safesky.phone') || '+7 (999) 123-45-67';
+    } catch (e) {
+      return '+7 (999) 123-45-67';
+    }
+  }
+
+  function code() {
+    return cells.map((c) => c.value).join('');
+  }
+
+  function setAlert(message, kind) {
+    if (!message) {
+      alertBox.classList.add('hidden');
+      alertText.textContent = '';
+      return;
+    }
+    alertIcon.textContent = kind === 'error' ? 'error' : 'info';
+    alertBox.classList.toggle('border-status-alert/50', kind === 'error');
+    alertBox.classList.toggle('bg-status-alert/10', kind === 'error');
+    alertBox.classList.toggle('border-border-crisp', kind !== 'error');
+    alertBox.classList.toggle('bg-surface-container-low', kind !== 'error');
+    alertText.textContent = message;
+    alertBox.classList.remove('hidden');
+  }
+
+  function paint(valid) {
+    cells.forEach((c) => c.setAttribute('aria-invalid', valid ? 'false' : 'true'));
+  }
+
+  function refresh() {
+    const full = code().length === 6;
+    submitBtn.disabled = !full || st.busy || st.blocked;
+    submitBtn.textContent = st.busy ? 'Проверяем…' : 'Подтвердить';
+    cells.forEach((c) => { c.disabled = st.busy || st.blocked; });
+    $('change-phone').disabled = st.busy;
+  }
+
+  function startCooldown(sec) {
+    st.cooldown = sec;
+    resendBtn.classList.add('hidden');
+    timerEl.classList.remove('hidden');
+    tickT();
+
+    function tickT() {
+      if (st.cooldown <= 0) {
+        timerEl.classList.add('hidden');
+        resendBtn.classList.remove('hidden');
+        return;
+      }
+      const word = st.cooldown === 1 ? 'секунду' : st.cooldown < 5 ? 'секунды' : 'секунд';
+      timerEl.textContent = 'Отправить код ещё раз можно через ' + st.cooldown + ' ' + word + '.';
+      st.cooldown -= 1;
+      setTimeout(tickT, 1000);
+    }
+  }
+
+  function succeed() {
+    stepEl.classList.add('hidden');
+    successEl.classList.remove('hidden');
+    successEl.classList.add('flex');
+    try {
+      sessionStorage.setItem('safesky.verified', '1');
+    } catch (e) { /* приватный режим */ }
+  }
+
+  async function requestCode() {
+    setAlert('');
+    st.blocked = false;
+    st.attemptsLeft = MAX_ATTEMPTS;
+    cells.forEach((c) => { c.value = ''; });
+    paint(true);
+    refresh();
+    if (DEMO) {
+      startCooldown(RESEND_SEC);
+      cells[0].focus();
+      return;
+    }
+    try {
+      const d = await Api.requestCode(st.phone);
+      startCooldown(Number(d.resendAfterSec) || RESEND_SEC);
+      cells[0].focus();
+    } catch (e) {
+      /* 429 RESEND_TOO_SOON — сервер сам сказал, сколько ждать */
+      const wait = Number(e.retryAfterSec) || RESEND_SEC;
+      startCooldown(wait);
+      if (e.code === 'RESEND_TOO_SOON' || e.code === 'TOO_MANY_REQUESTS') {
+        setAlert('Новый код можно запросить через ' + wait + ' секунд.', 'info');
+      } else if (e.code === 'INVALID_PHONE') {
+        setAlert('Проверьте номер: нужен российский номер в формате +7 (XXX) XXX-XX-XX.', 'error');
+      } else {
+        setAlert('Не удалось отправить код. Попробуйте ещё раз через минуту.', 'error');
+      }
+    }
+  }
+
+  async function verify() {
+    if (st.busy || st.blocked) return;
+    st.busy = true;
+    setAlert('');
+    refresh();
+    try {
+      if (DEMO) {
+        await new Promise((res) => setTimeout(res, 600));
+        if (code() === DEMO_CODE) { succeed(); return; }
+        failWrong();
+        return;
+      }
+      /* При успехе js/api.js сам сохраняет токен (localStorage safesky_token) */
+      await Api.verifyCode(st.phone, code());
+      succeed();
+      return;
+    } catch (e) {
+      if (e.code === 'CODE_INVALID') { failWrong(Number(e.attemptsLeft)); return; }
+      if (e.code === 'CODE_BLOCKED') { failBlocked(); return; }
+      if (e.code === 'CODE_EXPIRED') { failExpired(); return; }
+      if (e.code === 'CODE_NOT_FOUND') { failExpired(); return; }
+      if (e.code === 'INVALID_CODE_FORMAT' || e.code === 'INVALID_PHONE') {
+        setAlert('Код состоит из 6 цифр. Проверьте ввод.', 'error');
+        return;
+      }
+      setAlert('Не удалось проверить код. Попробуйте ещё раз.', 'error');
+    } finally {
+      st.busy = false;
+      refresh();
+    }
+  }
+
+  function failWrong(serverAttemptsLeft) {
+    st.attemptsLeft = Number.isFinite(serverAttemptsLeft) ? serverAttemptsLeft : st.attemptsLeft - 1;
+    if (st.attemptsLeft <= 0) { failBlocked(); return; }
+    setAlert('Неверный код. Осталось попыток: ' + st.attemptsLeft + '.', 'error');
+    paint(false);
+    cells.forEach((c) => { c.value = ''; });
+    cells[0].focus();
+  }
+
+  function failBlocked() {
+    st.blocked = true;
+    setAlert('Код заблокирован. Запросите новый код.', 'error');
+    cells.forEach((c) => { c.value = ''; });
+    st.cooldown = 0;
+    resendBtn.classList.remove('hidden');
+    timerEl.classList.add('hidden');
+    refresh();
+  }
+
+  function failExpired() {
+    setAlert('Код устарел. Запросите новый код.', 'error');
+    cells.forEach((c) => { c.value = ''; });
+    paint(false);
+    refresh();
+  }
+
+  /* --- Ввод: только цифры, авто-переход, вставка, Backspace --- */
+  cells.forEach((cell, i) => {
+    cell.addEventListener('input', () => {
+      cell.value = cell.value.replace(/\D/g, '').slice(0, 1);
+      if (cell.value && i < cells.length - 1) cells[i + 1].focus();
+      if (code().length === 6) setAlert('');
+      paint(true);
+      refresh();
+      maybeAutoSubmit();
+    });
+    cell.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !cell.value && i > 0) {
+        cells[i - 1].value = '';
+        cells[i - 1].focus();
+        refresh();
+        e.preventDefault();
+      }
+      if (e.key === 'ArrowLeft' && i > 0) cells[i - 1].focus();
+      if (e.key === 'ArrowRight' && i < cells.length - 1) cells[i + 1].focus();
+    });
+    cell.addEventListener('paste', (e) => {
+      const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+      if (!text) return;
+      e.preventDefault();
+      const digits = text.slice(0, 6).split('');
+      digits.forEach((d, k) => { if (cells[k]) cells[k].value = d; });
+      const next = Math.min(digits.length, cells.length - 1);
+      cells[next].focus();
+      paint(true);
+      refresh();
+      maybeAutoSubmit();
+    });
+  });
+
+  /* Код набран целиком — проверяем сразу, не дожидаясь нажатия «Подтвердить».
+     Кнопка остаётся для мыши, клавиатуры и скринридера. */
+  function maybeAutoSubmit() {
+    if (code().length !== 6 || st.busy || st.blocked) return;
+    verify();
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    verify();
+  });
+
+  $('change-phone').addEventListener('click', () => {
+    window.location.href = 'index.html#register';
+  });
+
+  resendBtn.addEventListener('click', requestCode);
+
+  /* --- Форсирование состояния для QA и скриншотов: ?state=… --- */
+  function forceState(name) {
+    const preset = {
+      empty: () => { cells.forEach((c) => { c.value = ''; }); },
+      partial: () => { ['1', '2', '3'].forEach((d, k) => { cells[k].value = d; }); },
+      verifying: () => { ['1', '2', '3', '4', '5', '6'].forEach((d, k) => { cells[k].value = d; }); st.busy = true; },
+      error: () => {
+        ['1', '2', '3', '4', '5', '6'].forEach((d, k) => { cells[k].value = k < 3 ? d : String((Number(d) + 1) % 10); });
+        st.attemptsLeft = 3;
+        setAlert('', '');
+        st.busy = true; refresh(); st.busy = false;
+        failWrong();
+      },
+      expired: () => { st.busy = true; refresh(); st.busy = false; failExpired(); },
+      blocked: () => { st.busy = true; refresh(); st.busy = false; failBlocked(); },
+      resend: () => { st.cooldown = 1; startCooldown(1); },
+      network: () => { setAlert('Не удалось отправить код. Попробуйте ещё раз через минуту.', 'error'); },
+      success: () => succeed(),
+    };
+    if (preset[name]) { preset[name](); }
+    paint(true);
+    refresh();
+  }
+
+  window.addEventListener('safesky:state', (e) => forceState(e.detail));
+  const qs = new URLSearchParams(window.location.search).get('state');
+  if (qs) forceState(qs);
+
+  /* --- Инициализация --- */
+  phoneEl.textContent = st.phone;
+  if (!DEMO) {
+    $('mode-note').textContent = 'Боевой режим: код отправляется по SMS.';
+    requestCode();
+  } else {
+    startCooldown(RESEND_SEC);
+  }
+  refresh();
+})();
+</script>
+</body></html>
