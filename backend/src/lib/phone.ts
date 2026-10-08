@@ -14,3 +14,9 @@ export function normalizePhone(raw: string): string | null {
 export function toExolveDigits(e164: string): string {
   return e164.replace(/^\+/, "");
 }
+
+// Маскирует телефон для логов: «…4567» (полный номер в логи не пишем — ПДн, SAF-223).
+export function maskPhoneForLog(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  return digits.length >= 4 ? `…${digits.slice(-4)}` : phone;
+}
