@@ -404,22 +404,6 @@
 </aside>
 </div>
 </div>
-<script>
-    (function() {
-      const btn = document.getElementById('test-call-btn');
-      const feedback = document.getElementById('test-call-feedback');
-      if (btn && feedback) {
-        btn.addEventListener('click', function() {
-          btn.classList.add('opacity-50', 'pointer-events-none');
-          btn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">refresh</span><span>НАБОР НОМЕРА...</span>';
-          feedback.classList.remove('hidden');
-          setTimeout(() => {
-            btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">check_circle</span><span>ЗВОНОК ОТПРАВЛЕН</span>';
-          }, 2400);
-        });
-      }
-    })();
-  </script>
 </div></main><footer class="w-full bg-surface-raised py-space-xl shadow-[0_-1px_12px_rgba(0,0,0,0.8)]"><div class="w-full px-gutter flex flex-col md:flex-row items-center justify-between gap-space-lg text-on-surface-variant"><div class="flex flex-wrap items-center gap-space-lg"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-status-active text-[18px]">shield_lock</span><span class="font-label-sm text-label-sm uppercase tracking-widest text-text-primary">ГОСТ TLS / SSL ШИФРОВАНИЕ АКТИВНО</span></div><span class="hidden md:inline text-on-surface-variant/40">|</span><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-text-secondary text-[18px]">verified</span><span class="font-label-sm text-label-sm uppercase tracking-wider text-text-secondary">РЕГЛАМЕНТ ОПОВЕЩЕНИЯ СЕРВИСА</span></div></div><div class="flex flex-wrap items-center gap-space-xl"><div class="font-label-sm text-label-sm tabular-nums text-text-secondary flex items-center gap-space-xs"><span class="w-1.5 h-1.5 rounded-full bg-status-active"></span>ПИНГ СЕТИ: 24мс • УЗЛЫ ОПРОСА: 18/18 ONLINE</div><div class="font-label-sm text-label-sm uppercase tracking-widest text-text-secondary">© 2026 «БЕЗОПАСНОЕ НЕБО». АВТОНОМНЫЙ КОМПЛЕКС.</div></div><div class="w-full flex flex-wrap items-center justify-center gap-space-md pt-space-md mt-space-md border-t border-border-subtle">
 <a class="font-label-sm text-label-sm uppercase tracking-wider text-text-secondary hover:text-text-primary transition-colors" href="legal.html#privacy">Политика обработки персональных данных</a>
 <a class="font-label-sm text-label-sm uppercase tracking-wider text-text-secondary hover:text-text-primary transition-colors" href="legal.html#terms">Пользовательское соглашение</a>
@@ -495,8 +479,10 @@
   var banner = $('lk-session-banner');
   var bannerText = $('lk-session-text');
   var bannerRetry = $('lk-session-retry');
+  var testCallBtn = $('test-call-btn');
+  var testCallFeedback = $('test-call-feedback');
 
-  var state = { airport: null, saving: false, lastFocus: null };
+  var state = { airport: null, saving: false, lastFocus: null, testCallBusy: false, testCallTimer: null };
 
   function readSession(key) {
     try { return sessionStorage.getItem(key); } catch (e) { return null; }
@@ -659,6 +645,56 @@
     window.location.href = 'index.html';
   }
 
+  /* Тестовый прозвон (SAF-234/235): задание ставится в очередь (POST
+     /api/test-call → 202 queued), звонок выполняет SIP-воркер вне Render.
+     Демо-режим повторяет анимацию макета без вызова сервера. */
+  function setTestCallContent(icon, label, spin) {
+    if (!testCallBtn) { return; }
+    var iconHtml = spin
+      ? '<span class="material-symbols-outlined text-[18px] animate-spin">refresh</span>'
+      : '<span class="material-symbols-outlined text-[18px]">' + icon + '</span>';
+    testCallBtn.innerHTML = iconHtml + '<span>' + label + '</span>';
+  }
+
+  function resetTestCall() {
+    state.testCallBusy = false;
+    if (testCallBtn) {
+      testCallBtn.classList.remove('opacity-50', 'pointer-events-none');
+      setTestCallContent('ring_volume', 'Тестовый прозвон', false);
+    }
+  }
+
+  function onTestCall() {
+    if (state.testCallBusy || !testCallBtn) { return; }
+    state.testCallBusy = true;
+    testCallBtn.classList.add('opacity-50', 'pointer-events-none');
+    setTestCallContent('refresh', 'НАБОР НОМЕРА...', true);
+    if (testCallFeedback) { testCallFeedback.classList.add('hidden'); }
+    hideBanner();
+
+    var showQueued = function () {
+      setTestCallContent('check_circle', 'ЗВОНОК В ОЧЕРЕДИ', false);
+      if (testCallFeedback) { testCallFeedback.classList.remove('hidden'); }
+      if (state.testCallTimer) { clearTimeout(state.testCallTimer); }
+      state.testCallTimer = setTimeout(resetTestCall, 5000);
+    };
+    var fail = function (err) {
+      resetTestCall();
+      var text = 'Не удалось поставить звонок в очередь — попробуйте позже.';
+      if (err && err.code === 'TEST_CALL_TOO_OFTEN') { text = err.message || text; }
+      else if (err && err.status === 401) { text = 'Сессия истекла. Подтвердите номер заново.'; }
+      else if (err && err.code) { text = err.message || text; }
+      setBanner(text, true);
+    };
+
+    if (DEMO || !Api || !Api.testCall) {
+      state.testCallTimer = setTimeout(showQueued, 1200);
+      return;
+    }
+    if (!Api.getToken || !Api.getToken()) { fail({ status: 401 }); return; }
+    Api.testCall().then(showQueued).catch(fail);
+  }
+
   var storedAirport = readSession('safesky.airport') || qs.get('airport');
   if (storedAirport && byCode(storedAirport)) { state.airport = storedAirport; }
 
@@ -672,6 +708,7 @@
   });
   if (logoutBtn) { logoutBtn.addEventListener('click', logout); }
   if (bannerRetry) { bannerRetry.addEventListener('click', loadProfile); }
+  if (testCallBtn) { testCallBtn.addEventListener('click', onTestCall); }
 
   setPhone(DEMO ? demoPhone() : '');
   renderList();
