@@ -80,6 +80,19 @@ describe("PlusofonFlashCallProvider", () => {
     expect("callback_url" in body).toBe(false);
   });
 
+  it("передаёт фиксированный pin (SAF-234, тестовый прозвон) и не добавляет поле без pin", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(okResponse({ id: "fc-4", number: "74950001122" }));
+    vi.stubGlobal("fetch", fetchMock);
+    await new PlusofonFlashCallProvider("k").flashCall("+79991234567", "", "1234");
+    let [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(init.body))).toEqual({ phone: "79991234567", pin: "1234" });
+
+    // Без pin (обычный авторизационный звонок) поле в тело не попадает.
+    await new PlusofonFlashCallProvider("k").flashCall("+79991234567", "");
+    [, init] = fetchMock.mock.calls[1] as [string, RequestInit];
+    expect("pin" in JSON.parse(String(init.body))).toBe(false);
+  });
+
   it("HTTP-ошибка провайдера превращается в SmsSendError с кодом статуса", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse({ error: "Bad API key" }, 403)));
     await expect(new PlusofonFlashCallProvider("bad").flashCall("+79991234567", "")).rejects.toThrow(SmsSendError);

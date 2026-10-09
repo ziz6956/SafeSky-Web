@@ -16,8 +16,9 @@ export interface FlashCallResult {
 export interface SmsProvider {
   readonly name: ProviderName;
   send(msg: SmsMessage): Promise<void>;
-  /** Flash Call (только plusofon); у exolve/console не определён. */
-  flashCall?(to: string, callbackUrl: string): Promise<FlashCallResult>;
+  /** Flash Call (только plusofon); у exolve/console не определён.
+   *  pin — фиксированный код (SAF-234, тестовый прозвон); без него код подбирает провайдер. */
+  flashCall?(to: string, callbackUrl: string, pin?: string): Promise<FlashCallResult>;
 }
 
 export class SmsSendError extends Error {

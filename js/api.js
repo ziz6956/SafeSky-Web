@@ -25,6 +25,12 @@
 // SafeSkyApi.patchSettings({ airport?, callsEnabled? }) → { user }
 //   (Bearer-токен подставляется автоматически; 401 UNAUTHORIZED — показать вход)
 //
+// SafeSkyApi.testCall() → { ok: true, status: "initiated", callId }
+//   Тестовый прозвон (SAF-234): звонок на номер из профиля через голосовой
+//   Flash Call Plusofon, голосом проговаривается «1-2-3-4», затем сброс.
+//   Ошибки: 401 UNAUTHORIZED · 429 TEST_CALL_TOO_OFTEN ·
+//           502 TEST_CALL_FAILED · 503 TEST_CALL_UNAVAILABLE
+//
 // Во всех ошибках: err.code — машинный код (см. выше), err.message — текст для человека.
 (function (global) {
   "use strict";
@@ -90,6 +96,9 @@
     },
     patchSettings: function (patch) {
       return request("/api/settings", { method: "PATCH", body: patch });
+    },
+    testCall: function () {
+      return request("/api/test-call", { method: "POST" });
     },
     getToken: getToken,
     clearToken: clearToken,

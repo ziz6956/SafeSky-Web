@@ -40,7 +40,7 @@ export class PlusofonFlashCallProvider implements SmsProvider {
     throw new SmsSendError("Plusofon: SMS-канал не подключён — доступен только Flash Call");
   }
 
-  async flashCall(to: string, callbackUrl: string): Promise<FlashCallResult> {
+  async flashCall(to: string, callbackUrl: string, pin?: string): Promise<FlashCallResult> {
     let res: Response;
     try {
       res = await fetch(PLUSOFON_SEND_URL, {
@@ -52,8 +52,10 @@ export class PlusofonFlashCallProvider implements SmsProvider {
         },
         body: JSON.stringify({
           phone: toExolveDigits(to),
-          // undefined отбрасывается JSON.stringify — колбэк необязателен (код может
-          // прийти прямо в ответе /send).
+          // pin — фиксированный код (SAF-234, тестовый прозвон): провайдер подбирает
+          // номер, последние цифры которого совпадают с кодом. undefined отбрасывается
+          // JSON.stringify — как и колбэк (код может прийти прямо в ответе /send).
+          pin: pin || undefined,
           callback_url: callbackUrl || undefined,
         }),
       });
@@ -68,10 +70,10 @@ export class PlusofonFlashCallProvider implements SmsProvider {
     // v1 прячет полезную нагрузку в data.key / data.pin; старый формат — плоский.
     const nested = ((data.data ?? {}) as Record<string, unknown>);
     const callId = pick(data, CALL_ID_KEYS) ?? pick(nested, CALL_ID_KEYS) ?? "";
-    const pin = pick(data, PIN_KEYS) ?? pick(nested, PIN_KEYS) ?? "";
+    const pinFromResponse = pick(data, PIN_KEYS) ?? pick(nested, PIN_KEYS) ?? "";
     // Код из pin (авторитетный, если включён return_pin); иначе — последние 4 цифры
     // номера звонящего; если и его нет — null, код придёт колбэком.
-    const code = /^\d{4}$/.test(pin) ? pin : last4Digits(pick(data, CALLER_KEYS) ?? pick(nested, CALLER_KEYS) ?? "");
+    const code = /^\d{4}$/.test(pinFromResponse) ? pinFromResponse : last4Digits(pick(data, CALLER_KEYS) ?? pick(nested, CALLER_KEYS) ?? "");
     console.log(`[sms:plusofon] flash call: callId=${callId || "—"}, код в ответе: ${code ? "да" : "нет"}`);
     return { callId, code };
   }
