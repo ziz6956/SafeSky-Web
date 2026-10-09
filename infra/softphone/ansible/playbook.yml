@@ -27,12 +27,25 @@
         update_cache: true
         cache_valid_time: 3600
 
-    - name: Установить pjsua2 (SIP-стек) и зависимости
+    # Пакета python3-pjsua2 нет ни в одном дистрибутиве (Debian 12/13, Ubuntu,
+    # PyPI — проверено 09.10.2026), поэтому ставим зависимости сборки и собираем
+    # биндинг из официальных исходников pjproject (см. scripts/build_pjsua2.sh).
+    - name: Установить зависимости сборки pjsua2
       apt:
         name:
-          - python3-pjsua2
+          - build-essential
           - python3
+          - python3-dev
+          - swig
+          - libssl-dev
+          - uuid-dev
+          - curl
+          - ca-certificates
         state: present
+
+    - name: Собрать и установить pjsua2 (python3-биндинг) из исходников
+      script: scripts/build_pjsua2.sh
+      changed_when: false
 
     - name: Пользователь сервиса
       user:

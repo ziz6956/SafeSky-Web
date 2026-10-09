@@ -1,2 +1,6 @@
 __pycache__/
 *.pyc
+
+# Локальное состояние terraform и скачанные провайдеры — не коммитим
+**/.terraform/*
+terraform.tfstate*

@@ -1,7 +1,7 @@
 variable "server_type" {
-  description = "Тип инстанса. CX22 — минимальный актуальный тип линейки Hetzner Cloud: 2 vCPU / 4 GB / 40 GB NVMe / 20 TB трафика / 1 публичный IPv4 (обоснование — README)."
+  description = "Тип инстанса. CPX22 — минимальный актуальный тип линейки Hetzner Cloud: 2 vCPU / 4 GB / 40 GB NVMe / 20 TB трафика / 1 публичный IPv4 (обоснование — README)."
   type        = string
-  default     = "cx22"
+  default     = "cpx22"
 }
 
 variable "location" {
