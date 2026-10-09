@@ -209,12 +209,31 @@ def poll_once(acc: pj.Account) -> bool:
     return True
 
 
+def keep_alive(reason: str) -> None:
+    """Держать сервис активным, пока конфигурация неполная.
+
+    Согласовано (SAF-235): воркер не падает и не crash-loop'ит при отсутствии
+    SIP-кредов или очереди — спит и ждёт обновления /etc/safesky-softphone/env
+    (systemd-перезапуск после обновления). В --once режиме, наоборот, выход
+    с кодом ошибки — это разовая ручная проверка.
+    """
+    log(f"{reason}; сервис остаётся активным, жду обновления /etc/safesky-softphone/env")
+    while True:
+        time.sleep(3600)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="SafeSky softphone worker (pjsua2, Plusofon SIP)")
     ap.add_argument("--once", action="store_true", help="разовый звонок и выход (проверка без очереди)")
     ap.add_argument("--phone", help="номер для --once: 79991234567")
     ap.add_argument("--wav", default=AUDIO_FILE, help="WAV для воспроизведения")
     args = ap.parse_args()
+
+    if not SIP_LOGIN or not SIP_PASSWORD:
+        if args.once:
+            log("SIP_LOGIN / SIP_PASSWORD не заданы (см. /etc/safesky-softphone/env)")
+            return 2
+        keep_alive("SIP_LOGIN / SIP_PASSWORD не заданы")
 
     ep = init_endpoint()
     try:
@@ -232,8 +251,7 @@ def main() -> int:
             return 0 if result == "delivered" else 1
 
         if not SUPABASE_URL or not SUPABASE_KEY:
-            log("SUPABASE_URL / SUPABASE_SERVICE_KEY не заданы — очередь недоступна")
-            return 2
+            keep_alive("SUPABASE_URL / SUPABASE_SERVICE_KEY не заданы — очередь недоступна")
 
         log(f"цикл опроса очереди запущен (интервал {POLL_INTERVAL} c)")
         while True:
