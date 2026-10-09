@@ -78,6 +78,14 @@
         group: root
         mode: "0644"
 
+    - name: Каталог конфигурации сервиса
+      file:
+        path: /etc/safesky-softphone
+        state: directory
+        owner: root
+        group: root
+        mode: "0700"
+
     - name: Env-файл с секретами (0600)
       template:
         src: safesky-softphone.env.j2
