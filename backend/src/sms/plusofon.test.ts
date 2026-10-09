@@ -27,8 +27,9 @@ describe("last4Digits", () => {
 });
 
 describe("PlusofonFlashCallProvider", () => {
-  it("шлёт POST /flash-call/send с Bearer-ключом и телефоном без «+»", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(okResponse({ id: "fc-1", caller_number: "74951234567" }));
+  it("шлёт POST /flash-call/send с Bearer-ключом, Client-заголовком и телефоном без «+»", async () => {
+    // Контракт v1: { success, data: { key, pin } }.
+    const fetchMock = vi.fn().mockResolvedValue(okResponse({ success: true, data: { key: "fc-1", pin: "2372" } }));
     vi.stubGlobal("fetch", fetchMock);
 
     const p = new PlusofonFlashCallProvider("test-key");
@@ -38,17 +39,33 @@ describe("PlusofonFlashCallProvider", () => {
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toBe(SEND_URL);
     expect(init.method).toBe("POST");
-    expect((init.headers as Record<string, string>)["Authorization"]).toBe("Bearer test-key");
+    const headers = init.headers as Record<string, string>;
+    expect(headers["Authorization"]).toBe("Bearer test-key");
+    expect(headers["Client"]).toBe("10553");
     expect(JSON.parse(String(init.body))).toEqual({
       phone: "79991234567",
       callback_url: "https://safesky-web.onrender.com/api/auth/flash-call/callback?secret=s",
     });
-    // Код = последние 4 цифры номера звонящего из ответа.
-    expect(result).toEqual({ callId: "fc-1", code: "4567" });
+    // Код = pin из ответа (return_pin), key — идентификатор вызова.
+    expect(result).toEqual({ callId: "fc-1", code: "2372" });
   });
 
-  it("code=null, когда в ответе нет номера звонящего (код придёт колбэком)", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse({ id: "fc-2" })));
+  it("pin имеет приоритет над номером звонящего, если пришли оба", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse({
+      data: { key: "fc-p", pin: "1234", caller_number: "74951234567" },
+    })));
+    const result = await new PlusofonFlashCallProvider("k").flashCall("+79991234567", "");
+    expect(result).toEqual({ callId: "fc-p", code: "1234" });
+  });
+
+  it("старый формат: код = последние 4 цифры номера звонящего, когда pin нет", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse({ id: "fc-legacy", caller_number: "74951234567" })));
+    const result = await new PlusofonFlashCallProvider("k").flashCall("+79991234567", "");
+    expect(result).toEqual({ callId: "fc-legacy", code: "4567" });
+  });
+
+  it("code=null, когда в ответе нет ни pin, ни номера звонящего (код придёт колбэком)", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse({ data: { key: "fc-2" } })));
     const result = await new PlusofonFlashCallProvider("k").flashCall("+79991234567", "");
     expect(result.callId).toBe("fc-2");
     expect(result.code).toBeNull();

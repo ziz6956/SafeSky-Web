@@ -136,7 +136,7 @@ export async function verifyCode(db: PrismaClient, secret: string, rawPhone: str
   const digitsWord = codeLength === 4 ? "цифры" : "цифр";
   const code = String(rawCode ?? "").trim();
   if (!new RegExp(`^\\d{${codeLength}}$`).test(code)) {
-    throw new ApiError(400, "INVALID_CODE_FORMAT", `Введите ${codeLength} ${digitsWord} — ${isFlash ? "последние цифры номера звонка" : "код из SMS"}`);
+    throw new ApiError(400, "INVALID_CODE_FORMAT", `Введите ${codeLength} ${digitsWord} — ${isFlash ? "код из звонка (робот продиктует его при ответе)" : "код из SMS"}`);
   }
 
   const now = new Date();
