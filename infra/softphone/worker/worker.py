@@ -34,6 +34,7 @@ SIP_LOGIN = os.environ.get("SIP_LOGIN", "")
 SIP_PASSWORD = os.environ.get("SIP_PASSWORD", "")
 POLL_INTERVAL = float(os.environ.get("POLL_INTERVAL", "2.0"))
 REG_TIMEOUT = float(os.environ.get("REG_TIMEOUT", "30.0"))
+REG_RETRY_SEC = int(os.environ.get("REG_RETRY_SEC", "300"))
 CALL_TIMEOUT = int(os.environ.get("CALL_TIMEOUT", "30"))  # таймаут дозвона, сек
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
@@ -239,8 +240,15 @@ def main() -> int:
     try:
         acc = pj.Account()
         acc.create(create_account())
-        if not wait_registration(acc, REG_TIMEOUT):
-            return 2
+        while not wait_registration(acc, REG_TIMEOUT):
+            if args.once:
+                return 2
+            log(f"регистрация не подтвердилась; повтор через {REG_RETRY_SEC} с")
+            time.sleep(REG_RETRY_SEC)
+            try:
+                acc.setRegister(True)
+            except Exception:
+                return 2
 
         if args.once:
             if not args.phone:

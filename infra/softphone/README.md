@@ -42,7 +42,7 @@ RTP-медиа там не пройдут. Поэтому софтфон жив�
 terraform/   — инстанс, firewall (SSH / SIP 5060 / RTP 10000–20000), SSH-ключ
 ansible/     — установка pjsua2, деплой воркера, env-файл, systemd-юнит
 worker/      — worker.py (pjsua2 + очередь Supabase), bootstrap_sip.py (SIP-аккаунт через API Plusofon)
-audio/       — test-call-ru.wav «Это тестовый прозвон сервиса SafeSky»
+audio/       — .gitkeep; WAV кладётся локально перед провижинингом (в репо не хранится)
 ```
 
 ## Переменные и секреты
@@ -122,10 +122,14 @@ Render-бэкенд пишет `pending`-задания (service key), ворк�
 
 `audio/test-call-ru.wav` — фраза «Это тестовый прозвон сервиса SafeSky»,
 WAV 16-bit PCM, mono, 8 кГц (родной формат pjsua2), длительность ≈ 3,7 с.
-Сгенерирован TTS (Google translate_tts, голос ru) с конвертацией 24 кГц → 8 кГц.
-Секретной информации в записи нет — файл публичен по указанию основателя.
-При смене текста: тот же формат; положить файл в `audio/` и перезапустить
-плейбук (или `systemctl restart safesky-softphone`).
+**В публичном репозитории не хранится** (ограничение SAF-234); в репо только
+`audio/.gitkeep` (плейбук копирует каталог как есть), а `audio/*.wav` — в
+`.gitignore`. На сервер файл уже доставлен.
+
+Генерация при смене текста: TTS (Google translate_tts, голос ru) → конвертация
+24 кГц → 8 кГц, 16-bit PCM, mono; положить файл локально в
+`infra/softphone/audio/test-call-ru.wav` и перезапустить плейбук
+(или `systemctl restart safesky-softphone`).
 
 ## Ограничения прототипа и известные TODO
 
