@@ -32,7 +32,13 @@ cd "$SRC"
 make dep -j"$(nproc)"
 make -j"$(nproc)"
 
-# Python-биндинг (SWIG): _pjsua2.so линкуется со статическими libpj* из сборки выше.
+# --enable-shared: libpj* собираются динамическими. Установить их в /usr/local/lib
+# и обновить кэш линковщика — иначе import pjsua2 падает с
+# "libpjsua2.so.2: cannot open shared object file".
+make install
+ldconfig
+
+# Python-биндинг (SWIG): _pjsua2.so линкуется с libpj* из сборки выше.
 cd pjsip-apps/src/swig
 make python
 cd python
