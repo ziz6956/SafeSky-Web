@@ -20,3 +20,10 @@ export function maskPhoneForLog(phone: string): string {
   const digits = phone.replace(/\D/g, "");
   return digits.length >= 4 ? `…${digits.slice(-4)}` : phone;
 }
+
+// Flash Call (SAF-223): код = последние 4 цифры номера звонящего.
+// null — номер короче 4 цифр (такого не бывает у реальных номеров).
+export function last4Digits(number: string): string | null {
+  const digits = (number ?? "").replace(/\D/g, "");
+  return digits.length >= 4 ? digits.slice(-4) : null;
+}

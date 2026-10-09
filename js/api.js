@@ -1,4 +1,4 @@
-// SafeSky — клиент бэкенда SMS-авторизации (SAF-206).
+// SafeSky — клиент бэкенда авторизации по номеру (SAF-206, SAF-223).
 // Все запросы к бэкенду идут ТОЛЬКО через этот модуль. Секреты сюда не попадают.
 //
 // Подключение на странице (порядок важен):
@@ -7,13 +7,17 @@
 //
 // === Контракт (для UX/UI, SAF-207) ===
 //
-// SafeSkyApi.requestCode(phone) → { ok: true, resendAfterSec: 30 }
+// SafeSkyApi.requestCode(phone) → { ok: true, resendAfterSec: 30, pending?: boolean }
+//   SMS: отправка 6-значного кода. Flash Call (SAF-223): запуск звонка-сброса,
+//   код = последние 4 цифры номера звонящего; pending=true — код станет
+//   известен после доставки звонка.
 //   Ошибки: 400 INVALID_PHONE · 429 RESEND_TOO_SOON (err.retryAfterSec) ·
 //           429 TOO_MANY_REQUESTS · 502 SMS_SEND_FAILED
 //
 // SafeSkyApi.verifyCode(phone, code) → { ok: true, token, user: { phone, airport, callsEnabled } }
 //   Ошибки: 400 INVALID_PHONE / INVALID_CODE_FORMAT · 401 CODE_INVALID (err.attemptsLeft) ·
-//           410 CODE_EXPIRED · 423 CODE_BLOCKED · 404 CODE_NOT_FOUND
+//           410 CODE_EXPIRED · 423 CODE_BLOCKED · 404 CODE_NOT_FOUND ·
+//           425 CODE_PENDING (звонок ещё не доставлен — попытки не сгорают)
 //   После успеха токен уже сохранён (localStorage "safesky_token") — можно
 //   переводить пользователя в ЛК.
 //

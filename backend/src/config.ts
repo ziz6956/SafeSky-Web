@@ -5,9 +5,12 @@ export interface Config {
   port: number;
   jwtSecret: string;
   corsOrigins: string[];
-  smsProvider: "console" | "exolve";
+  smsProvider: "console" | "exolve" | "plusofon";
   exolveApiKey: string;
   exolveSender: string;
+  plusofonApiKey: string;
+  plusofonWebhookSecret: string;
+  flashCallbackBaseUrl: string;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -29,8 +32,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     .filter(Boolean);
 
   const smsProvider = env.SMS_PROVIDER ?? "console";
-  if (smsProvider !== "console" && smsProvider !== "exolve") {
-    throw new Error(`[config] SMS_PROVIDER должен быть "console" или "exolve", получено: ${smsProvider}`);
+  if (smsProvider !== "console" && smsProvider !== "exolve" && smsProvider !== "plusofon") {
+    throw new Error(`[config] SMS_PROVIDER должен быть "console", "exolve" или "plusofon", получено: ${smsProvider}`);
   }
   const exolveApiKey = env.EXOLVE_API_KEY ?? "";
   const exolveSender = env.EXOLVE_SENDER ?? "";
@@ -38,7 +41,31 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     throw new Error("[config] SMS_PROVIDER=exolve требует EXOLVE_API_KEY и EXOLVE_SENDER");
   }
 
-  return { nodeEnv, port, jwtSecret, corsOrigins, smsProvider, exolveApiKey, exolveSender };
+  // Plusofon Flash Call (SAF-223): ключ кладёт основатель в Render env, секрет колбэка —
+  // генерация FE (не секрет основателя), base-URL колбэка Render подставляет сам
+  // (RENDER_EXTERNAL_URL); локально можно переопределить FLASH_CALLBACK_BASE_URL.
+  const plusofonApiKey = env.PLUSOFON_API_KEY ?? "";
+  const plusofonWebhookSecret = env.PLUSOFON_WEBHOOK_SECRET ?? "";
+  if (smsProvider === "plusofon" && !plusofonApiKey) {
+    throw new Error("[config] SMS_PROVIDER=plusofon требует PLUSOFON_API_KEY");
+  }
+  if (smsProvider === "plusofon" && nodeEnv === "production" && !plusofonWebhookSecret) {
+    throw new Error("[config] SMS_PROVIDER=plusofon в production требует PLUSOFON_WEBHOOK_SECRET");
+  }
+  const flashCallbackBaseUrl = (env.FLASH_CALLBACK_BASE_URL ?? env.RENDER_EXTERNAL_URL ?? "").replace(/\/+$/, "");
+
+  return {
+    nodeEnv,
+    port,
+    jwtSecret,
+    corsOrigins,
+    smsProvider,
+    exolveApiKey,
+    exolveSender,
+    plusofonApiKey,
+    plusofonWebhookSecret,
+    flashCallbackBaseUrl,
+  };
 }
 
 export const config: Config = loadConfig();

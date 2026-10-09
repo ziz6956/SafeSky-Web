@@ -23,12 +23,16 @@ model User {
   @@map("users")
 }
 
-/// Одноразовый SMS-код. Хранится только HMAC-SHA256 кода (JWT_SECRET),
-/// открытым текстом код в БД не лежит. TTL и попытки — серверно.
+/// Одноразовый код авторизации (SMS или Flash Call). Хранится только
+/// HMAC-SHA256 кода (JWT_SECRET), открытым текстом код в БД не лежит.
+/// TTL и попытки — серверно. SAF-223: для Flash Call codeHash заполняется
+/// после того, как стал известен номер звонящего (ответ /send или колбэк),
+/// до этого — null (верификация отвечает 425 CODE_PENDING).
 model SmsCode {
   id        String    @id @default(cuid())
   phone     String // E.164, код ещё не привязан к User (регистрация не завершена)
-  codeHash  String
+  codeHash  String? // HMAC-SHA256 кода; null — звонок ещё не доставлен
+  callId    String? // id звонка у провайдера (Flash Call); null — SMS-путь
   attempts  Int       @default(0) // неверных попыток; >= 3 — код мёртв
   expiresAt DateTime // TTL 5 минут с момента отправки
   usedAt    DateTime? // проставлен при успешной верификации
