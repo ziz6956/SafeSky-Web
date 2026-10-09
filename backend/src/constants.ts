@@ -5,6 +5,9 @@ export const MAX_ATTEMPTS = 3; // максимум 3 попытки на код
 export const RESEND_COOLDOWN_SEC = 30; // повторная отправка не чаще 30 секунд
 export const JWT_TTL_SEC = 30 * 24 * 3600; // токен живёт 30 суток (пилот)
 
+// Flash Call (SAF-223): код = последние 4 цифры номера входящего звонка-сброса.
+export const FLASH_CODE_LENGTH = 4;
+
 // Шаблон SMS — канон SAF-190/SAF-179 (кириллица ≤ 70 символов → 1 сегмент).
 export const smsTemplate = (code: string): string =>
   `SafeSky: ваш код — ${code}. Никому не сообщайте.`;
