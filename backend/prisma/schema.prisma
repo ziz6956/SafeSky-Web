@@ -41,3 +41,23 @@ model SmsCode {
   @@index([phone, createdAt])
   @@map("sms_codes")
 }
+
+/// Задание тестового прозвонка (SAF-234/235): очередь для SIP-воркера (pjsua2).
+/// Воркер живёт вне Render (Hetzner/РФ-VPS) и ходит только через HTTP-эндпоинты
+/// /api/test-call/queue/* — прямого доступа к Render Postgres извне нет.
+/// status: pending → ringing → delivered | failed (терминальные статусы
+/// иммутабельны — урок SAF-198: повторный результат не откатывает завершённое).
+model CallJob {
+  id          String    @id @default(cuid())
+  userId      String // владелец задания (для лимитов/аудита)
+  phone       String // E.164: +79XXXXXXXXX — снимок номера на момент постановки
+  status      String    @default("pending")
+  worker      String? // hostname воркера, взявшего задание
+  error       String? // текст ошибки при failed (из журнала воркера)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, createdAt])
+  @@map("call_jobs")
+}

@@ -11,6 +11,7 @@ export interface Config {
   plusofonFlashCallToken: string;
   plusofonWebhookSecret: string;
   flashCallbackBaseUrl: string;
+  workerToken: string;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -58,6 +59,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   }
   const flashCallbackBaseUrl = (env.FLASH_CALLBACK_BASE_URL ?? env.RENDER_EXTERNAL_URL ?? "").replace(/\/+$/, "");
 
+  // Токен SIP-воркера (SAF-234/235): воркер поллит очередь через HTTP.
+  // Отдельный от JWT пользователей секрет; пустой — воркер не настроен
+  // (POST /api/test-call отвечает 503, чтобы звонок не завис в очереди навсегда).
+  const workerToken = env.WORKER_TOKEN ?? "";
+
   return {
     nodeEnv,
     port,
@@ -69,6 +75,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     plusofonFlashCallToken,
     plusofonWebhookSecret,
     flashCallbackBaseUrl,
+    workerToken,
   };
 }
 

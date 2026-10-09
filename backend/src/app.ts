@@ -6,6 +6,7 @@ import authRouter from "./routes/auth";
 import healthRouter from "./routes/health";
 import meRouter from "./routes/me";
 import settingsRouter from "./routes/settings";
+import testCallRouter from "./routes/test-call";
 
 // CORS (постановка SAF-206): точный origin https://ziz6956.github.io + http://localhost:*
 // для локальной разработки. Авторизация — Bearer-токен, поэтому точный origin достаточен;
@@ -35,6 +36,7 @@ export function createApp(): express.Express {
   app.use("/api/auth", authRouter);
   app.use("/api/me", meRouter);
   app.use("/api/settings", settingsRouter);
+  app.use("/api/test-call", testCallRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
