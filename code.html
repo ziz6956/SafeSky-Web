@@ -40,10 +40,11 @@
             <div class="flex flex-col gap-space-md relative z-10" id="code-step">
               <div class="flex flex-col gap-space-xs text-center items-center">
                 <span class="font-label-sm text-label-sm text-status-active tracking-widest uppercase">Шаг 2 из 3 · Подтверждение номера</span>
-                <h1 class="sk-h2 text-text-primary">Введите код из SMS</h1>
+                <h1 class="sk-h2 text-text-primary">Введите последние 4 цифры номера звонка</h1>
                 <p class="font-body-md text-body-md text-text-secondary sk-safe max-w-md">
-                  Мы отправили 6-значный код на номер
-                  <span class="text-text-primary font-medium tabular-nums whitespace-nowrap" id="phone-display">+7 (999) 123-45-67</span>.
+                  Мы позвоним на номер
+                  <span class="text-text-primary font-medium tabular-nums whitespace-nowrap" id="phone-display">+7 (999) 123-45-67</span>
+                  и сбросим вызов. Введите последние 4 цифры номера, с которого поступит звонок.
                 </p>
                 <button class="font-label-md text-label-md text-text-secondary hover:text-status-active uppercase tracking-wider transition-colors mt-space-xs" id="change-phone" type="button">
                   Изменить номер
@@ -57,23 +58,21 @@
               </div>
 
               <form class="flex flex-col gap-space-md" id="code-form" novalidate>
-                <span class="font-label-md text-label-md text-text-secondary uppercase tracking-wider text-center" id="otp-label">Код из 6 цифр</span>
+                <span class="font-label-md text-label-md text-text-secondary uppercase tracking-wider text-center" id="otp-label">Последние 4 цифры номера</span>
 
                 <div class="flex items-center gap-space-xs sm:gap-space-sm w-full" id="otp-group" role="group" aria-labelledby="otp-label">
                   <input aria-label="Цифра 1" autocomplete="one-time-code" class="sk-otp-cell" inputmode="numeric" maxlength="1" type="text"/>
                   <input aria-label="Цифра 2" autocomplete="off" class="sk-otp-cell" inputmode="numeric" maxlength="1" type="text"/>
                   <input aria-label="Цифра 3" autocomplete="off" class="sk-otp-cell" inputmode="numeric" maxlength="1" type="text"/>
                   <input aria-label="Цифра 4" autocomplete="off" class="sk-otp-cell" inputmode="numeric" maxlength="1" type="text"/>
-                  <input aria-label="Цифра 5" autocomplete="off" class="sk-otp-cell" inputmode="numeric" maxlength="1" type="text"/>
-                  <input aria-label="Цифра 6" autocomplete="off" class="sk-otp-cell" inputmode="numeric" maxlength="1" type="text"/>
                 </div>
 
                 <div class="flex flex-col gap-space-xs">
                   <p class="font-body-md text-body-md text-text-secondary text-center" id="otp-hint">Код действует 5 минут.</p>
                   <div class="flex flex-col sm:flex-row items-center justify-center gap-space-xs text-center">
-                    <span class="font-body-md text-body-md text-text-secondary tabular-nums" id="resend-timer">Отправить код ещё раз можно через 30 секунд.</span>
+                    <span class="font-body-md text-body-md text-text-secondary tabular-nums" id="resend-timer">Позвонить ещё раз можно через 30 секунд.</span>
                     <button class="font-body-md text-body-md text-status-active font-medium underline decoration-status-active/40 underline-offset-4 hover:decoration-status-active transition-colors hidden" id="resend-btn" type="button">
-                      Отправить код ещё раз
+                      Позвонить ещё раз
                     </button>
                   </div>
                 </div>
@@ -85,7 +84,7 @@
 
               <div class="flex items-start justify-center gap-space-xs text-text-secondary font-label-sm text-label-sm tracking-wider uppercase text-center">
                 <span class="material-symbols-outlined text-[14px] text-status-active shrink-0">info</span>
-                <span class="sk-safe" id="mode-note">Демо-режим: SMS не отправляется, номер никуда не передаётся и не сохраняется.</span>
+                <span class="sk-safe" id="mode-note">Демо-режим: звонок не совершается, номер никуда не передаётся и не сохраняется.</span>
               </div>
             </div>
 
@@ -102,11 +101,11 @@
             </div>
           </div>
 
-          <!-- Справка: шаблон SMS -->
+          <!-- Справка: как работает Flash Call -->
           <div class="w-full p-space-md rounded border border-border-crisp bg-surface-raised/60 flex flex-col gap-space-xs">
-            <span class="font-label-sm text-label-sm text-text-secondary uppercase tracking-wider">Шаблон SMS</span>
-            <p class="font-body-md text-body-md text-text-primary tabular-nums">SafeSky: ваш код — XXXXXX. Никому не сообщайте.</p>
-            <span class="font-label-sm text-label-sm text-text-secondary">В прототипе сообщение не отправляется. Тестовый код: 123456.</span>
+            <span class="font-label-sm text-label-sm text-text-secondary uppercase tracking-wider">Как это работает</span>
+            <p class="font-body-md text-body-md text-text-primary">Мы звоним на ваш номер и сразу сбрасываем вызов — отвечать не нужно. Код подтверждения: последние 4 цифры номера входящего звонка.</p>
+            <span class="font-label-sm text-label-sm text-text-secondary">В прототипе звонок не совершается. Тестовый код: 1234.</span>
           </div>
 
         </div>
@@ -126,7 +125,7 @@
          (опубликованный прототип со страницы GitHub Pages до локального
          докера не достучится).
      Обратное неверно: при боевом URL демо не включается никогда — иначе
-     прототип принимал бы код 123456 вместо проверки на сервере.
+     прототип принимал бы код 1234 вместо проверки на сервере.
      Явно: ?demo=1 / ?demo=0. */
   const Api = window.SafeSkyApi || null;
   const CFG = window.SafeSkyConfig || {};
@@ -138,7 +137,7 @@
   const DEMO = demoParam === '1' ? true
     : demoParam === '0' ? false
     : (!Api || !base || (baseIsLocal && !pageIsLocal));
-  const DEMO_CODE = '123456';
+  const DEMO_CODE = '1234';
   const MAX_ATTEMPTS = Number(CFG.SMS_ATTEMPTS_MAX) || 3;
   const RESEND_SEC = Number(CFG.SMS_RESEND_SECONDS) || 30;
 
@@ -189,7 +188,7 @@
   }
 
   function refresh() {
-    const full = code().length === 6;
+    const full = code().length === 4;
     submitBtn.disabled = !full || st.busy || st.blocked;
     submitBtn.textContent = st.busy ? 'Проверяем…' : 'Подтвердить';
     cells.forEach((c) => { c.disabled = st.busy || st.blocked; });
@@ -209,7 +208,7 @@
         return;
       }
       const word = st.cooldown === 1 ? 'секунду' : st.cooldown < 5 ? 'секунды' : 'секунд';
-      timerEl.textContent = 'Отправить код ещё раз можно через ' + st.cooldown + ' ' + word + '.';
+      timerEl.textContent = 'Позвонить ещё раз можно через ' + st.cooldown + ' ' + word + '.';
       st.cooldown -= 1;
       setTimeout(tickT, 1000);
     }
@@ -249,7 +248,7 @@
       } else if (e.code === 'INVALID_PHONE') {
         setAlert('Проверьте номер: нужен российский номер в формате +7 (XXX) XXX-XX-XX.', 'error');
       } else {
-        setAlert('Не удалось отправить код. Попробуйте ещё раз через минуту.', 'error');
+        setAlert('Не удалось запустить звонок. Попробуйте ещё раз через минуту.', 'error');
       }
     }
   }
@@ -275,8 +274,14 @@
       if (e.code === 'CODE_BLOCKED') { failBlocked(); return; }
       if (e.code === 'CODE_EXPIRED') { failExpired(); return; }
       if (e.code === 'CODE_NOT_FOUND') { failExpired(); return; }
+      if (e.code === 'CODE_PENDING') {
+        /* Flash Call: звонок ещё не доставлен — попытки не сгорают,
+           код можно ввести/проверить повторно без нового звонка. */
+        setAlert('Звонок ещё не доставлен. Дождитесь входящего вызова и нажмите «Подтвердить».', 'info');
+        return;
+      }
       if (e.code === 'INVALID_CODE_FORMAT' || e.code === 'INVALID_PHONE') {
-        setAlert('Код состоит из 6 цифр. Проверьте ввод.', 'error');
+        setAlert('Введите последние 4 цифры номера звонка.', 'error');
         return;
       }
       setAlert('Не удалось проверить код. Попробуйте ещё раз.', 'error');
@@ -317,7 +322,7 @@
     cell.addEventListener('input', () => {
       cell.value = cell.value.replace(/\D/g, '').slice(0, 1);
       if (cell.value && i < cells.length - 1) cells[i + 1].focus();
-      if (code().length === 6) setAlert('');
+      if (code().length === 4) setAlert('');
       paint(true);
       refresh();
       maybeAutoSubmit();
@@ -336,7 +341,7 @@
       const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
       if (!text) return;
       e.preventDefault();
-      const digits = text.slice(0, 6).split('');
+      const digits = text.slice(0, 4).split('');
       digits.forEach((d, k) => { if (cells[k]) cells[k].value = d; });
       const next = Math.min(digits.length, cells.length - 1);
       cells[next].focus();
@@ -349,7 +354,7 @@
   /* Код набран целиком — проверяем сразу, не дожидаясь нажатия «Подтвердить».
      Кнопка остаётся для мыши, клавиатуры и скринридера. */
   function maybeAutoSubmit() {
-    if (code().length !== 6 || st.busy || st.blocked) return;
+    if (code().length !== 4 || st.busy || st.blocked) return;
     verify();
   }
 
@@ -369,9 +374,9 @@
     const preset = {
       empty: () => { cells.forEach((c) => { c.value = ''; }); },
       partial: () => { ['1', '2', '3'].forEach((d, k) => { cells[k].value = d; }); },
-      verifying: () => { ['1', '2', '3', '4', '5', '6'].forEach((d, k) => { cells[k].value = d; }); st.busy = true; },
+      verifying: () => { ['1', '2', '3', '4'].forEach((d, k) => { cells[k].value = d; }); st.busy = true; },
       error: () => {
-        ['1', '2', '3', '4', '5', '6'].forEach((d, k) => { cells[k].value = k < 3 ? d : String((Number(d) + 1) % 10); });
+        ['1', '2', '3', '4'].forEach((d, k) => { cells[k].value = k < 3 ? d : String((Number(d) + 1) % 10); });
         st.attemptsLeft = 3;
         setAlert('', '');
         st.busy = true; refresh(); st.busy = false;
@@ -380,7 +385,7 @@
       expired: () => { st.busy = true; refresh(); st.busy = false; failExpired(); },
       blocked: () => { st.busy = true; refresh(); st.busy = false; failBlocked(); },
       resend: () => { st.cooldown = 1; startCooldown(1); },
-      network: () => { setAlert('Не удалось отправить код. Попробуйте ещё раз через минуту.', 'error'); },
+      network: () => { setAlert('Не удалось запустить звонок. Попробуйте ещё раз через минуту.', 'error'); },
       success: () => succeed(),
     };
     if (preset[name]) { preset[name](); }
@@ -395,7 +400,7 @@
   /* --- Инициализация --- */
   phoneEl.textContent = st.phone;
   if (!DEMO) {
-    $('mode-note').textContent = 'Боевой режим: код отправляется по SMS.';
+    $('mode-note').textContent = 'Боевой режим: подтверждение входящим звонком (Flash Call).';
     requestCode();
   } else {
     startCooldown(RESEND_SEC);

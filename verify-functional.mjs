@@ -25,26 +25,26 @@ await page.waitForTimeout(800);
 check('index: с согласием переход на code.html', page.url().includes('code.html'));
 check('index: телефон сохранён', await page.evaluate(() => sessionStorage.getItem('safesky.phone') === '+7 (999) 123-45-67'));
 
-// 2. code.html?demo=1: код 123456 → success; неверный код → ошибка
+// 2. code.html?demo=1: код 1234 (Flash Call) → success; неверный код → ошибка
 await page.goto(`${BASE}/code.html?demo=1`, { waitUntil: 'networkidle' });
 const cells = page.locator('.sk-otp-cell');
-check('code: 6 OTP-ячеек', (await cells.count()) === 6);
+check('code: 4 OTP-ячейки (Flash Call)', (await cells.count()) === 4);
 await cells.nth(0).fill('9'); await cells.nth(1).fill('9'); await cells.nth(2).fill('9');
-await cells.nth(3).fill('9'); await cells.nth(4).fill('9'); await cells.nth(5).fill('9');
-// форма автосабмитится на 6-й цифре (кнопка уходит в «Проверяем…»)
+await cells.nth(3).fill('9');
+// форма автосабмитится на 4-й цифре (кнопка уходит в «Проверяем…»)
 await page.waitForTimeout(900);
 const errVisible = await page.isVisible('#code-alert');
 check('code: неверный код → алерт', errVisible);
 const demoPhone = await page.textContent('#phone-display');
 check('code: телефон в шапке экрана', /123-45-67|123-4567|999/.test(demoPhone), demoPhone.trim());
 
-// вводим 123456 (демо-код) — попытки обнуляем перезагрузкой (состояние в памяти)
+// вводим 1234 (демо-код) — попытки обнуляем перезагрузкой (состояние в памяти)
 await page.goto(`${BASE}/code.html?demo=1`, { waitUntil: 'networkidle' });
 const c2 = page.locator('.sk-otp-cell');
-for (const [i, ch] of '123456'.split('').entries()) await c2.nth(i).fill(ch);
+for (const [i, ch] of '1234'.split('').entries()) await c2.nth(i).fill(ch);
 await page.waitForTimeout(900);
 const successVisible = await page.isVisible('#success-state');
-check('code: демо-код 123456 → success', successVisible);
+check('code: демо-код 1234 → success', successVisible);
 
 // 3. lk.html: тумблеры не включены по умолчанию, ссылка отзыва согласия
 await page.goto(`${BASE}/lk.html`, { waitUntil: 'networkidle' });
