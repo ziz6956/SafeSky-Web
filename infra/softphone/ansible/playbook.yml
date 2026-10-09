@@ -3,7 +3,8 @@
 #
 # Секреты передаются через переменные окружения (в файлы не попадают):
 #   export SIP_LOGIN=... SIP_PASSWORD=...                 # учётные данные SIP Plusofon
-#   export SUPABASE_URL=... SUPABASE_SERVICE_KEY=...      # очередь call_queue
+#   export SIP_SERVER=...                                 # <аккаунт>.voice.plusofon.ru (из ЛК Plusofon)
+#   export QUEUE_BASE_URL=... WORKER_TOKEN=...            # очередь Render (/api/test-call/queue/*)
 #   export PLUSOFON_API_TOKEN=...                         # опционально: bootstrap_sip.py
 #
 # Запуск:
@@ -17,8 +18,9 @@
     # Секреты — только из окружения выполняющего; не задавать в этом файле.
     sip_login: "{{ lookup('env', 'SIP_LOGIN') | default('', true) }}"
     sip_password: "{{ lookup('env', 'SIP_PASSWORD') | default('', true) }}"
-    supabase_url: "{{ lookup('env', 'SUPABASE_URL') | default('', true) }}"
-    supabase_service_key: "{{ lookup('env', 'SUPABASE_SERVICE_KEY') | default('', true) }}"
+    sip_server: "{{ lookup('env', 'SIP_SERVER') | default('', true) }}"
+    queue_base_url: "{{ lookup('env', 'QUEUE_BASE_URL') | default('', true) }}"
+    worker_token: "{{ lookup('env', 'WORKER_TOKEN') | default('', true) }}"
     plusofon_api_token: "{{ lookup('env', 'PLUSOFON_API_TOKEN') | default('', true) }}"
 
   tasks:

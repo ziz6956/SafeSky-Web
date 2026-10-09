@@ -31,6 +31,8 @@ services:
         sync: false
       - key: TELEGRAM_BOT_TOKEN
         sync: false
+      - key: WORKER_TOKEN
+        sync: false            # Bearer-токен SIP-воркера (SAF-234/235): /api/test-call/queue/*
       # --- Конфиг (не секреты), фиксирован постановкой SAF-206/SAF-219 ---
       - key: CORS_ORIGINS
         value: https://ziz6956.github.io

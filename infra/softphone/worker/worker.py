@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
-"""SAF-234: софтфон-воркер (pjsua2) — тестовый прозвон через Plusofon.
+"""SAF-234/235: софтфон-воркер (pjsua2) — тестовый прозвон через Plusofon.
 
 SIP-регистрация в Plusofon → исходящий звонок → воспроизведение WAV → сброс.
-Источник заданий — очередь Supabase (таблица call_queue); либо разовая проверка:
+Источник заданий — очередь Render (HTTP-эндпоинты /api/test-call/queue/*;
+прямого подключения к Render Postgres извне нет — free-тариф). Разовая
+проверка без очереди:
 
     python3 worker.py --once --phone 79991234567
 
 Переменные окружения (все секреты — в /etc/safesky-softphone/env, см. Ansible):
   SIP_LOGIN, SIP_PASSWORD     — учётные данные SIP-аккаунта Plusofon
-  SIP_SERVER, SIP_PORT        — sip.plusofon.ru:5060 по умолчанию
+  SIP_SERVER, SIP_PORT        — <аккаунт>.voice.plusofon.ru:5060 по умолчанию
   SIP_LOCAL_PORT              — локальный UDP-порт (5060)
   AUDIO_FILE                  — WAV для воспроизведения
-  SUPABASE_URL, SUPABASE_SERVICE_KEY — очередь call_queue
+  QUEUE_BASE_URL              — базовый URL бэкенда Render (https://safesky-web.onrender.com)
+  WORKER_TOKEN                — Bearer-токен эндпоинтов очереди (WORKER_TOKEN на Render)
   POLL_INTERVAL, REG_TIMEOUT  — интервал опроса / таймаут регистрации (сек)
 """
 
 import argparse
 import json
 import os
+import socket
 import sys
 import threading
 import time
@@ -37,9 +41,11 @@ REG_TIMEOUT = float(os.environ.get("REG_TIMEOUT", "30.0"))
 REG_RETRY_SEC = int(os.environ.get("REG_RETRY_SEC", "300"))
 CALL_TIMEOUT = int(os.environ.get("CALL_TIMEOUT", "30"))  # таймаут дозвона, сек
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
-SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
-QUEUE_TABLE = os.environ.get("QUEUE_TABLE", "call_queue")
+# Очередь Render (SAF-235): вместо Supabase воркер ходит в HTTP-эндпоинты
+# бэкенда — GET /api/test-call/queue/poll (клейм задания) и
+# POST /api/test-call/queue/<id>/result (терминальный статус).
+QUEUE_BASE_URL = os.environ.get("QUEUE_BASE_URL", "")
+WORKER_TOKEN = os.environ.get("WORKER_TOKEN", "")
 
 
 def log(msg: str) -> None:
@@ -174,39 +180,44 @@ def wait_call_result(call: PlayCall, max_wait: float = 120.0) -> str:
     return call.result
 
 
-# --- очередь Supabase -----------------------------------------------------
+# --- очередь Render (HTTP) --------------------------------------------------
 
 def http_json(method: str, url: str, payload: dict | None = None):
+    """HTTP-запрос к очереди. 204 (пустая очередь) → None."""
     req = urllib.request.Request(url, method=method)
-    req.add_header("apikey", SUPABASE_KEY)
-    req.add_header("Authorization", f"Bearer {SUPABASE_KEY}")
-    req.add_header("Content-Type", "application/json")
-    data = json.dumps(payload).encode() if payload is not None else None
+    req.add_header("Authorization", f"Bearer {WORKER_TOKEN}")
+    data = None
+    if payload is not None:
+        req.add_header("Content-Type", "application/json")
+        data = json.dumps(payload).encode()
     with urllib.request.urlopen(req, data, timeout=15) as r:
-        return json.loads(r.read().decode() or "[]")
+        if r.status == 204:
+            return None
+        return json.loads(r.read().decode() or "null")
 
 
 def poll_once(acc: pj.Account) -> bool:
-    """Один заход в очередь: взять pending-задание, позвонить, записать статус."""
-    url = f"{SUPABASE_URL}/rest/v1/{QUEUE_TABLE}?status=eq.pending&order=created_at.asc&limit=1"
-    rows = http_json("GET", url)
-    if not rows:
+    """Один заход в очередь: клейм задания, звонок, запись результата."""
+    url = f"{QUEUE_BASE_URL}/api/test-call/queue/poll?worker={socket.gethostname()}"
+    res = http_json("GET", url)
+    if not res or not res.get("job"):
         return False
-    job = rows[0]
-    job_id = job["id"]
-    http_json("PATCH", f"{SUPABASE_URL}/rest/v1/{QUEUE_TABLE}?id=eq.{job_id}",
-              {"status": "ringing", "worker": os.uname().nodename})
+    job = res["job"]
+    log(f"задание {job['id']}: набираю {job['phone']}")
     try:
         call = make_test_call(acc, job["phone"], AUDIO_FILE)
         result = wait_call_result(call)
     except Exception as e:  # noqa: BLE001 — статус пишем в очередь при любой ошибке
         log(f"ошибка звонка: {e}")
         result = "failed"
-    patch = {"status": result, "completed_at": "now()"}
+    payload = {"status": result}
     if result == "failed":
-        patch["error"] = "см. журнал воркера"
-    http_json("PATCH", f"{SUPABASE_URL}/rest/v1/{QUEUE_TABLE}?id=eq.{job_id}", patch)
-    log(f"задание {job_id}: {result}")
+        payload["error"] = "см. журнал воркера"
+    try:
+        http_json("POST", f"{QUEUE_BASE_URL}/api/test-call/queue/{job['id']}/result", payload)
+    except Exception as e:  # noqa: BLE001 — задание вернётся в очередь по stale-таймауту
+        log(f"не удалось записать результат: {e}")
+    log(f"задание {job['id']}: {result}")
     return True
 
 
@@ -258,10 +269,10 @@ def main() -> int:
             log(f"результат: {result}")
             return 0 if result == "delivered" else 1
 
-        if not SUPABASE_URL or not SUPABASE_KEY:
-            keep_alive("SUPABASE_URL / SUPABASE_SERVICE_KEY не заданы — очередь недоступна")
+        if not QUEUE_BASE_URL or not WORKER_TOKEN:
+            keep_alive("QUEUE_BASE_URL / WORKER_TOKEN не заданы — очередь недоступна")
 
-        log(f"цикл опроса очереди запущен (интервал {POLL_INTERVAL} c)")
+        log(f"цикл опроса очереди запущен ({QUEUE_BASE_URL}, интервал {POLL_INTERVAL} c)")
         while True:
             try:
                 poll_once(acc)
