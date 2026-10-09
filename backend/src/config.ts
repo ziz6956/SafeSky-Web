@@ -8,7 +8,7 @@ export interface Config {
   smsProvider: "console" | "exolve" | "plusofon";
   exolveApiKey: string;
   exolveSender: string;
-  plusofonApiKey: string;
+  plusofonFlashCallToken: string;
   plusofonWebhookSecret: string;
   flashCallbackBaseUrl: string;
 }
@@ -41,13 +41,17 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     throw new Error("[config] SMS_PROVIDER=exolve требует EXOLVE_API_KEY и EXOLVE_SENDER");
   }
 
-  // Plusofon Flash Call (SAF-223): ключ кладёт основатель в Render env, секрет колбэка —
-  // генерация FE (не секрет основателя), base-URL колбэка Render подставляет сам
-  // (RENDER_EXTERNAL_URL); локально можно переопределить FLASH_CALLBACK_BASE_URL.
-  const plusofonApiKey = env.PLUSOFON_API_KEY ?? "";
+  // Plusofon Flash Call (SAF-223): два разных токена.
+  // PLUSOFON_API_KEY (основной ключ ЛК) — только для управления аккаунтами/пакетами
+  // по API, приложением не читается. PLUSOFON_FLASH_CALL_TOKEN — access_token
+  // Flash Call-аккаунта (выдаётся при создании аккаунта), им подписывается
+  // /flash-call/send. Секрет колбэка — генерация FE (не секрет основателя),
+  // base-URL колбэка Render подставляет сам (RENDER_EXTERNAL_URL); локально
+  // можно переопределить FLASH_CALLBACK_BASE_URL.
+  const plusofonFlashCallToken = env.PLUSOFON_FLASH_CALL_TOKEN ?? "";
   const plusofonWebhookSecret = env.PLUSOFON_WEBHOOK_SECRET ?? "";
-  if (smsProvider === "plusofon" && !plusofonApiKey) {
-    throw new Error("[config] SMS_PROVIDER=plusofon требует PLUSOFON_API_KEY");
+  if (smsProvider === "plusofon" && !plusofonFlashCallToken) {
+    throw new Error("[config] SMS_PROVIDER=plusofon требует PLUSOFON_FLASH_CALL_TOKEN (access_token Flash Call-аккаунта)");
   }
   if (smsProvider === "plusofon" && nodeEnv === "production" && !plusofonWebhookSecret) {
     throw new Error("[config] SMS_PROVIDER=plusofon в production требует PLUSOFON_WEBHOOK_SECRET");
@@ -62,7 +66,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     smsProvider,
     exolveApiKey,
     exolveSender,
-    plusofonApiKey,
+    plusofonFlashCallToken,
     plusofonWebhookSecret,
     flashCallbackBaseUrl,
   };

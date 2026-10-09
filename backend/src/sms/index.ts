@@ -9,7 +9,7 @@ export function createSmsProvider(cfg: Config): SmsProvider {
     return new ExolveSmsProvider(cfg.exolveApiKey, cfg.exolveSender);
   }
   if (cfg.smsProvider === "plusofon") {
-    return new PlusofonFlashCallProvider(cfg.plusofonApiKey);
+    return new PlusofonFlashCallProvider(cfg.plusofonFlashCallToken);
   }
   return new ConsoleSmsProvider();
 }
