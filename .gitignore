@@ -1,0 +1,4 @@
+# Провижининг-секреты не попадают в публичный репозиторий
+infra/softphone/ansible/hosts.ini
+infra/softphone/terraform/terraform.tfstate
+infra/softphone/terraform/terraform.tfstate.backup
