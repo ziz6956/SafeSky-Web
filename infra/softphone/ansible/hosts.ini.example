@@ -1,0 +1,4 @@
+# Пример inventory. IP берётся из вывода terraform: `terraform output server_ipv4`.
+# Скопировать в hosts.ini (НЕ коммитить).
+[softphone]
+safesky-softphone-01 ansible_host=REPLACE_WITH_SERVER_IP ansible_user=root

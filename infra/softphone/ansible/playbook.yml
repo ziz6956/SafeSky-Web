@@ -1,0 +1,135 @@
+---
+# SAF-234: настройка сервера софтфона (после `terraform apply`).
+#
+# Секреты передаются через переменные окружения (в файлы не попадают):
+#   export SIP_LOGIN=... SIP_PASSWORD=...                 # учётные данные SIP Plusofon
+#   export SIP_SERVER=...                                 # <аккаунт>.voice.plusofon.ru (из ЛК Plusofon)
+#   export QUEUE_BASE_URL=... WORKER_TOKEN=...            # очередь Render (/api/test-call/queue/*)
+#   export PLUSOFON_API_TOKEN=...                         # опционально: bootstrap_sip.py
+#
+# Запуск:
+#   ansible-playbook -i hosts.ini playbook.yml
+- name: Развернуть софтфон SafeSky (pjsua2 + Plusofon SIP)
+  hosts: softphone
+  become: true
+  vars:
+    deploy_dir: /opt/safesky-softphone
+    service_user: safesky
+    # Секреты — только из окружения выполняющего; не задавать в этом файле.
+    sip_login: "{{ lookup('env', 'SIP_LOGIN') | default('', true) }}"
+    sip_password: "{{ lookup('env', 'SIP_PASSWORD') | default('', true) }}"
+    sip_server: "{{ lookup('env', 'SIP_SERVER') | default('', true) }}"
+    queue_base_url: "{{ lookup('env', 'QUEUE_BASE_URL') | default('', true) }}"
+    worker_token: "{{ lookup('env', 'WORKER_TOKEN') | default('', true) }}"
+    plusofon_api_token: "{{ lookup('env', 'PLUSOFON_API_TOKEN') | default('', true) }}"
+
+  tasks:
+    - name: Обновить индекс пакетов
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    # Пакета python3-pjsua2 нет ни в одном дистрибутиве (Debian 12/13, Ubuntu,
+    # PyPI — проверено 09.10.2026), поэтому ставим зависимости сборки и собираем
+    # биндинг из официальных исходников pjproject (см. scripts/build_pjsua2.sh).
+    - name: Установить зависимости сборки pjsua2
+      apt:
+        name:
+          - build-essential
+          - python3
+          - python3-dev
+          - swig
+          - libssl-dev
+          - uuid-dev
+          - curl
+          - ca-certificates
+        state: present
+
+    - name: Собрать и установить pjsua2 (python3-биндинг) из исходников
+      script: scripts/build_pjsua2.sh
+      changed_when: false
+
+    - name: Пользователь сервиса
+      user:
+        name: "{{ service_user }}"
+        system: true
+        shell: /usr/sbin/nologin
+        create_home: false
+
+    - name: Каталог приложения
+      file:
+        path: "{{ deploy_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Файлы воркера
+      copy:
+        src: ../worker/
+        dest: "{{ deploy_dir }}"
+        owner: root
+        group: root
+        mode: "0644"
+      notify: перезапуск воркера
+
+    - name: Аудиофайл сообщения
+      copy:
+        src: ../audio/
+        dest: "{{ deploy_dir }}/audio"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Каталог конфигурации сервиса
+      file:
+        path: /etc/safesky-softphone
+        state: directory
+        owner: root
+        group: root
+        mode: "0700"
+
+    - name: Env-файл с секретами (0600)
+      template:
+        src: safesky-softphone.env.j2
+        dest: /etc/safesky-softphone/env
+        owner: root
+        group: root
+        mode: "0600"
+
+    - name: systemd-юнит
+      template:
+        src: safesky-softphone.service.j2
+        dest: /etc/systemd/system/safesky-softphone.service
+        owner: root
+        group: root
+        mode: "0644"
+      notify: перезапуск воркера
+
+    - name: Включить и запустить воркер
+      systemd:
+        name: safesky-softphone
+        daemon_reload: true
+        enabled: true
+        state: started
+
+    # Опционально: создать SIP-аккаунт Plusofon через API (если задан токен).
+    - name: Bootstrap SIP-аккаунта Plusofon (опционально)
+      command: python3 {{ deploy_dir }}/bootstrap_sip.py
+      environment:
+        PLUSOFON_API_TOKEN: "{{ plusofon_api_token }}"
+        SIP_PASSWORD: "{{ sip_password }}"
+      register: sip_bootstrap
+      changed_when: false
+      when: plusofon_api_token | length > 0
+
+    - name: Вывод bootstrap_sip.py
+      debug:
+        var: sip_bootstrap.stdout_lines
+      when: plusofon_api_token | length > 0
+
+  handlers:
+    - name: перезапуск воркера
+      systemd:
+        name: safesky-softphone
+        state: restarted

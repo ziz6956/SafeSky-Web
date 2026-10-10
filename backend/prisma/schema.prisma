@@ -16,7 +16,7 @@ model User {
   id           String   @id @default(cuid())
   phone        String   @unique // E.164: +79XXXXXXXXX
   airport      String   @default("DME") // IATA-код домашнего аэропорта
-  callsEnabled Boolean  @default(true) // тумблер «Уведомлять звонком»
+  callsEnabled Boolean  @default(false) // тумблер «Уведомлять звонком»; fail-closed (SAF-244 F1): без активного согласия вызовы не включаются
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -40,4 +40,49 @@ model SmsCode {
 
   @@index([phone, createdAt])
   @@map("sms_codes")
+}
+
+/// Задание тестового прозвонка (SAF-234/235): очередь для SIP-воркера (pjsua2).
+/// Воркер живёт вне Render (Hetzner/РФ-VPS) и ходит только через HTTP-эндпоинты
+/// /api/test-call/queue/* — прямого доступа к Render Postgres извне нет.
+/// status: pending → ringing → delivered | failed | cancelled (терминальные статусы
+/// иммутабельны — урок SAF-198: повторный результат не откатывает завершённое).
+/// cancelled — отказ абонента (SAF-244, ч. 2 ст. 44.1-1 126-ФЗ): снятие задания
+/// из очереди; воркер снимает только pending, поэтому cancelled не обзванивается.
+model CallJob {
+  id          String    @id @default(cuid())
+  userId      String // владелец задания (для лимитов/аудита)
+  phone       String // E.164: +79XXXXXXXXX — снимок номера на момент постановки
+  status      String    @default("pending")
+  worker      String? // hostname воркера, взявшего задание
+  error       String? // текст ошибки при failed (из журнала воркера)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, createdAt])
+  @@map("call_jobs")
+}
+
+/// Доказательство согласия на автоматические вызовы (SAF-244, ч. 1 ст. 44.1-1
+/// 126-ФЗ «О связи», ч. 3 ст. 9 152-ФЗ). Каждая запись — активное действие
+/// абонента: grant (согласие дано) или revoke (отказ, безусловный — ч. 2
+/// ст. 44.1-1 + ПП РФ от 30.12.2024 № 1994 пп. 222–226). Append-only журнал:
+/// записи не редактируются и не удаляются. Без записи согласия юридически
+/// нет — тумблер users.callsEnabled доказательством не является (он лишь
+/// отражает операционное состояние, меняется по действию абонента).
+model CallConsent {
+  id          String   @id @default(cuid())
+  userId      String // владелец (id пользователя на момент действия)
+  phone       String // E.164 — снимок номера на момент действия
+  action      String // "grant" | "revoke"
+  textId      String? // идентификатор показанного текста согласия (null — отказ)
+  textVersion Int? // версия текста (null — отказ)
+  ip          String? // IP абонента (за прокси Render — X-Forwarded-For, 1 хоп)
+  userAgent   String? // user-agent браузера/клиента
+  channel     String // "web_form" (форма регистрации) | "lk" (личный кабинет)
+  createdAt   DateTime @default(now()) // метка времени действия
+
+  @@index([userId, createdAt])
+  @@map("call_consents")
 }

@@ -14,9 +14,13 @@
 //   Ошибки: 400 INVALID_PHONE · 429 RESEND_TOO_SOON (err.retryAfterSec) ·
 //           429 TOO_MANY_REQUESTS · 502 SMS_SEND_FAILED
 //
-// SafeSkyApi.verifyCode(phone, code) → { ok: true, token, user: { phone, airport, callsEnabled } }
-//   Ошибки: 400 INVALID_PHONE / INVALID_CODE_FORMAT · 401 CODE_INVALID (err.attemptsLeft) ·
-//           410 CODE_EXPIRED · 423 CODE_BLOCKED · 404 CODE_NOT_FOUND ·
+// SafeSkyApi.verifyCode(phone, code, opts?) → { ok: true, token, user: { phone, airport, callsEnabled } }
+//   opts.callsConsent (boolean) — согласие на автоматические вызовы (SAF-244):
+//   при регистрации фиксируется на сервере как доказательство (call_consents),
+//   callsEnabled=true только при true.
+//   Ошибки: 400 INVALID_PHONE / INVALID_CODE_FORMAT / INVALID_BODY ·
+//           401 CODE_INVALID (err.attemptsLeft) · 410 CODE_EXPIRED ·
+//           423 CODE_BLOCKED · 404 CODE_NOT_FOUND ·
 //           425 CODE_PENDING (звонок ещё не доставлен — попытки не сгорают)
 //   После успеха токен уже сохранён (localStorage "safesky_token") — можно
 //   переводить пользователя в ЛК.
@@ -24,6 +28,11 @@
 // SafeSkyApi.getMe() → { user: { phone, airport, callsEnabled } }
 // SafeSkyApi.patchSettings({ airport?, callsEnabled? }) → { user }
 //   (Bearer-токен подставляется автоматически; 401 UNAUTHORIZED — показать вход)
+//
+// SafeSkyApi.testCall() → { ok: true, status: "queued", jobId }
+//   Тестовый прозвон (SAF-234/235): задание ставится в очередь call_jobs,
+//   звонит SIP-воркер (pjsua2 + Plusofon) вне Render.
+//   Ошибки: 401 UNAUTHORIZED · 429 TEST_CALL_TOO_OFTEN · 503 TEST_CALL_UNAVAILABLE
 //
 // Во всех ошибках: err.code — машинный код (см. выше), err.message — текст для человека.
 (function (global) {
@@ -78,8 +87,10 @@
     requestCode: function (phone) {
       return request("/api/auth/request-code", { method: "POST", auth: false, body: { phone: phone } });
     },
-    verifyCode: function (phone, code) {
-      return request("/api/auth/verify-code", { method: "POST", auth: false, body: { phone: phone, code: code } })
+    verifyCode: function (phone, code, opts) {
+      var body = { phone: phone, code: code };
+      if (opts && typeof opts.callsConsent === "boolean") { body.callsConsent = opts.callsConsent; }
+      return request("/api/auth/verify-code", { method: "POST", auth: false, body: body })
         .then(function (data) {
           setToken(data.token);
           return data;
@@ -90,6 +101,9 @@
     },
     patchSettings: function (patch) {
       return request("/api/settings", { method: "PATCH", body: patch });
+    },
+    testCall: function () {
+      return request("/api/test-call", { method: "POST" });
     },
     getToken: getToken,
     clearToken: clearToken,

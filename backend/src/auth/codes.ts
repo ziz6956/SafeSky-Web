@@ -3,7 +3,7 @@
 // SMS: 6 цифр; Flash Call (SAF-223): последние 4 цифры номера звонящего.
 // Общее: TTL 5 мин, 3 попытки, ресенд ≥30 с, блокировка после 3 неверных.
 import crypto from "node:crypto";
-import type { PrismaClient } from "@prisma/client";
+import type { Prisma, PrismaClient, User } from "@prisma/client";
 import {
   CODE_LENGTH,
   CODE_TTL_SEC,
@@ -118,8 +118,20 @@ export async function resolveFlashCall(
   return true;
 }
 
-/** Верификация кода: при успехе создаёт/находит пользователя и возвращает его. */
-export async function verifyCode(db: PrismaClient, secret: string, rawPhone: string, rawCode: string) {
+/**
+ * Верификация кода: при успехе находит/создаёт пользователя.
+ * SAF-244: callsConsent — согласие на автоматические вызовы, данное на форме
+ * (отдельное от ПДн, ч. 1 ст. 44.1-1 126-ФЗ). Вызовы включаются ТОЛЬКО активным
+ * действием: callsConsent=true при создании. Повторный вход не меняет тумблер —
+ * отозвавший абонент остаётся отозванным (отказ безусловен).
+ */
+export async function verifyCode(
+  db: PrismaClient | Prisma.TransactionClient,
+  secret: string,
+  rawPhone: string,
+  rawCode: string,
+  opts: { callsConsent?: boolean } = {},
+): Promise<{ user: User; created: boolean }> {
   const phone = normalizePhone(rawPhone);
   if (!phone) {
     throw invalidPhone();
@@ -160,8 +172,17 @@ export async function verifyCode(db: PrismaClient, secret: string, rawPhone: str
   }
 
   await db.smsCode.update({ where: { id: latest.id }, data: { usedAt: now } });
-  // Пользователь создаётся только в момент успешной верификации —
+  // Существующий абонент: повторный вход ничего не меняет и не «переигрывает»
+  // отказ — согласие даётся действием на форме регистрации или в ЛК.
+  const existing = await db.user.findUnique({ where: { phone } });
+  if (existing) {
+    return { user: existing, created: false };
+  }
+  // Новый абонент создаётся только в момент успешной верификации —
   // брошенные регистрации не оставляют мусорных записей в users.
-  const user = await db.user.upsert({ where: { phone }, update: {}, create: { phone } });
-  return user;
+  // callsEnabled = callsConsent: без активного согласия вызовы выключены (fail-closed).
+  const user = await db.user.create({
+    data: { phone, callsEnabled: opts.callsConsent === true },
+  });
+  return { user, created: true };
 }

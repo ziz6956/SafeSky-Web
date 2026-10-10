@@ -151,10 +151,10 @@
 <!-- Hub Alert Switches & Controls -->
 <div class="flex flex-wrap items-center justify-between gap-space-md pt-space-xs" id="channels">
 <div class="flex flex-wrap items-center gap-space-lg">
-<!-- Toggle: Voice Call -->
-<label class="flex items-center gap-space-sm cursor-pointer select-none">
+<!-- Toggle: Voice Call (SAF-244: тумблер = операционное состояние; доказательство — запись согласия на сервере) -->
+<label class="flex items-center gap-space-sm cursor-pointer select-none" id="calls-toggle-label">
 <div class="relative">
-<input class="sr-only peer" type="checkbox"/>
+<input class="sr-only peer" id="calls-toggle" checked type="checkbox"/>
 <div class="w-10 h-5 bg-surface-elevated rounded-full peer peer-checked:bg-status-active transition-colors"></div>
 <div class="dot absolute left-0.5 top-0.5 bg-text-on-accent w-4 h-4 rounded-full transition-transform peer-checked:translate-x-5"></div>
 </div>
@@ -170,9 +170,24 @@
 <span class="font-label-md text-label-md text-text-primary uppercase tracking-wider">Telegram-бот</span>
 </label>
 </div>
-<p class="w-full font-body-md text-body-md text-text-secondary mt-space-xs max-w-xl">
-              Согласен на автоматические вызовы на этот номер при подтверждённой угрозе. Отказ — в любое время этим тумблером; вызовы прекращаются на следующий день (ст. 44.1-1 ФЗ «О связи»).
+<p class="w-full font-body-md text-body-md text-text-secondary mt-space-xs max-w-xl" id="calls-consent-note">
+              Я согласен получать автоматические телефонные вызовы от сервиса SafeSky на указанный номер — для подтверждения номера и для доставки уведомлений; понимаю, что вызовы совершаются автоматически, с воспроизведением записанного сообщения. Я могу отказаться в любой момент в личном кабинете — вызовы прекращаются не позднее следующего дня.
             </p>
+<p class="w-full font-label-sm text-label-sm text-text-secondary hidden" id="calls-toggle-status"></p>
+<!-- Подтверждение повторного согласия (SAF-244): активное действие в ЛК -->
+<div class="w-full bg-surface-base/60 rounded-lg p-space-md border border-border-crisp hidden" id="calls-confirm">
+<p class="font-body-md text-body-md text-text-secondary leading-snug">
+                Я согласен получать автоматические телефонные вызовы от сервиса SafeSky на указанный номер — для подтверждения номера и для доставки уведомлений; понимаю, что вызовы совершаются автоматически, с воспроизведением записанного сообщения. Я могу отказаться в любой момент в личном кабинете — вызовы прекращаются не позднее следующего дня.
+              </p>
+<label class="flex items-start gap-space-sm cursor-pointer mt-space-sm">
+<input class="mt-1 accent-[#D4FF00] rounded cursor-pointer" id="calls-confirm-check" type="checkbox"/>
+<span class="font-body-md text-body-md text-text-primary leading-snug">Прочитал(а) и согласен(на) получать автоматические вызовы</span>
+</label>
+<div class="flex flex-wrap items-center gap-space-sm mt-space-sm">
+<button class="px-space-md py-space-sm rounded bg-status-active text-text-on-accent font-label-md text-label-md uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed" id="calls-confirm-btn" type="button">Согласен — включить звонки</button>
+<button class="px-space-md py-space-sm rounded bg-surface-elevated text-text-primary font-label-md text-label-md uppercase tracking-wider" id="calls-confirm-cancel" type="button">Отмена</button>
+</div>
+</div>
 <div class="flex items-center gap-space-md">
 <button class="text-text-secondary hover:text-text-primary font-label-sm text-label-sm uppercase tracking-wider flex items-center gap-space-xs transition-colors" type="button">
 <span class="material-symbols-outlined text-[16px]">tune</span>
@@ -404,22 +419,6 @@
 </aside>
 </div>
 </div>
-<script>
-    (function() {
-      const btn = document.getElementById('test-call-btn');
-      const feedback = document.getElementById('test-call-feedback');
-      if (btn && feedback) {
-        btn.addEventListener('click', function() {
-          btn.classList.add('opacity-50', 'pointer-events-none');
-          btn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">refresh</span><span>НАБОР НОМЕРА...</span>';
-          feedback.classList.remove('hidden');
-          setTimeout(() => {
-            btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">check_circle</span><span>ЗВОНОК ОТПРАВЛЕН</span>';
-          }, 2400);
-        });
-      }
-    })();
-  </script>
 </div></main><footer class="w-full bg-surface-raised py-space-xl shadow-[0_-1px_12px_rgba(0,0,0,0.8)]"><div class="w-full px-gutter flex flex-col md:flex-row items-center justify-between gap-space-lg text-on-surface-variant"><div class="flex flex-wrap items-center gap-space-lg"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-status-active text-[18px]">shield_lock</span><span class="font-label-sm text-label-sm uppercase tracking-widest text-text-primary">ГОСТ TLS / SSL ШИФРОВАНИЕ АКТИВНО</span></div><span class="hidden md:inline text-on-surface-variant/40">|</span><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-text-secondary text-[18px]">verified</span><span class="font-label-sm text-label-sm uppercase tracking-wider text-text-secondary">РЕГЛАМЕНТ ОПОВЕЩЕНИЯ СЕРВИСА</span></div></div><div class="flex flex-wrap items-center gap-space-xl"><div class="font-label-sm text-label-sm tabular-nums text-text-secondary flex items-center gap-space-xs"><span class="w-1.5 h-1.5 rounded-full bg-status-active"></span>ПИНГ СЕТИ: 24мс • УЗЛЫ ОПРОСА: 18/18 ONLINE</div><div class="font-label-sm text-label-sm uppercase tracking-widest text-text-secondary">© 2026 «БЕЗОПАСНОЕ НЕБО». АВТОНОМНЫЙ КОМПЛЕКС.</div></div><div class="w-full flex flex-wrap items-center justify-center gap-space-md pt-space-md mt-space-md border-t border-border-subtle">
 <a class="font-label-sm text-label-sm uppercase tracking-wider text-text-secondary hover:text-text-primary transition-colors" href="legal.html#privacy">Политика обработки персональных данных</a>
 <a class="font-label-sm text-label-sm uppercase tracking-wider text-text-secondary hover:text-text-primary transition-colors" href="legal.html#terms">Пользовательское соглашение</a>
@@ -495,8 +494,17 @@
   var banner = $('lk-session-banner');
   var bannerText = $('lk-session-text');
   var bannerRetry = $('lk-session-retry');
+  var testCallBtn = $('test-call-btn');
+  var testCallFeedback = $('test-call-feedback');
+  var callsToggle = $('calls-toggle');
+  var callsToggleLabel = $('calls-toggle-label');
+  var callsToggleStatus = $('calls-toggle-status');
+  var callsConfirm = $('calls-confirm');
+  var callsConfirmCheck = $('calls-confirm-check');
+  var callsConfirmBtn = $('calls-confirm-btn');
+  var callsConfirmCancel = $('calls-confirm-cancel');
 
-  var state = { airport: null, saving: false, lastFocus: null };
+  var state = { airport: null, saving: false, lastFocus: null, testCallBusy: false, testCallTimer: null, callsEnabled: true, callsBusy: false };
 
   function readSession(key) {
     try { return sessionStorage.getItem(key); } catch (e) { return null; }
@@ -641,6 +649,11 @@
       var u = (data && data.user) || {};
       setPhone(u.phone || demoPhone());
       if (u.airport && byCode(u.airport)) { state.airport = u.airport; }
+      // Тумблер звонка — из сервера (состояние согласия, SAF-244).
+      if (typeof u.callsEnabled === 'boolean') {
+        state.callsEnabled = u.callsEnabled;
+        setCallsToggle(state.callsEnabled);
+      }
       renderList();
     }).catch(function (err) {
       renderList();
@@ -652,11 +665,140 @@
     });
   }
 
+  /* Тумблер «Голосовой звонок» (SAF-244): операционное состояние согласия.
+     Доказательством служит запись на сервере (call_consents), а не тумблер.
+     Выключение = безусловный отказ (ч. 2 ст. 44.1-1 126-ФЗ): сервер пишет
+     revoke и снимает задания из очереди. Включение = новое согласие —
+     только через явное подтверждение текста в панели. */
+  function setCallsToggle(on) {
+    if (!callsToggle) { return; }
+    callsToggle.checked = on === true;
+  }
+
+  function setCallsStatus(text) {
+    if (!callsToggleStatus) { return; }
+    callsToggleStatus.textContent = text || '';
+    callsToggleStatus.classList.toggle('hidden', !text);
+  }
+
+  function openCallsConfirm() {
+    if (!callsConfirm || !callsConfirmCheck || !callsConfirmBtn) { return; }
+    callsConfirmCheck.checked = false;
+    callsConfirmBtn.disabled = true;
+    callsConfirm.classList.remove('hidden');
+  }
+
+  function closeCallsConfirm() {
+    if (callsConfirm) { callsConfirm.classList.add('hidden'); }
+  }
+
+  function applyCallsEnabled(next, onDone, onFail) {
+    state.callsBusy = true;
+    if (callsToggleLabel) { callsToggleLabel.classList.add('opacity-50', 'pointer-events-none'); }
+    var done = function () {
+      state.callsBusy = false;
+      state.callsEnabled = next;
+      if (callsToggleLabel) { callsToggleLabel.classList.remove('opacity-50', 'pointer-events-none'); }
+      setCallsToggle(next);
+      if (onDone) { onDone(); }
+    };
+    var fail = function (err) {
+      state.callsBusy = false;
+      if (callsToggleLabel) { callsToggleLabel.classList.remove('opacity-50', 'pointer-events-none'); }
+      setCallsToggle(state.callsEnabled); // вернуть как было
+      if (onFail) { onFail(err); }
+    };
+    if (DEMO || !Api || !Api.patchSettings) { done(); return; }
+    if (!Api.getToken || !Api.getToken()) { fail({ status: 401 }); return; }
+    Api.patchSettings({ callsEnabled: next }).then(done).catch(fail);
+  }
+
+  function onCallsToggle() {
+    var target = callsToggle.checked;
+    if (state.callsBusy) { setCallsToggle(state.callsEnabled); return; }
+    if (target === state.callsEnabled) { return; }
+    if (!target) {
+      // Отказ — безусловный и немедленный.
+      closeCallsConfirm();
+      applyCallsEnabled(false, function () {
+        setCallsStatus('Вызовы отключены. Новые звонки не поступят — изменение действует не позднее следующего дня.');
+      }, function (err) {
+        setCallsStatus(err && err.status === 401 ? 'Сессия истекла. Подтвердите номер заново.' : 'Не удалось отключить вызовы — попробуйте ещё раз.');
+      });
+      return;
+    }
+    // Включение — новое согласие: показываем текст, просим явное подтверждение.
+    setCallsToggle(false);
+    setCallsStatus('');
+    openCallsConfirm();
+  }
+
+  function onCallsConfirm() {
+    if (!callsConfirmCheck || !callsConfirmCheck.checked) { return; }
+    closeCallsConfirm();
+    applyCallsEnabled(true, function () {
+      setCallsStatus('Вызовы включены — согласие зафиксировано.');
+    }, function (err) {
+      setCallsStatus(err && err.status === 401 ? 'Сессия истекла. Подтвердите номер заново.' : 'Не удалось включить вызовы — попробуйте ещё раз.');
+    });
+  }
+
   function logout() {
     if (Api && Api.clearToken) { Api.clearToken(); }
     dropSession('safesky.verified');
     dropSession('safesky.airport');
+    dropSession('safesky.callsConsent');
     window.location.href = 'index.html';
+  }
+
+  /* Тестовый прозвон (SAF-234/235): задание ставится в очередь (POST
+     /api/test-call → 202 queued), звонок выполняет SIP-воркер вне Render.
+     Демо-режим повторяет анимацию макета без вызова сервера. */
+  function setTestCallContent(icon, label, spin) {
+    if (!testCallBtn) { return; }
+    var iconHtml = spin
+      ? '<span class="material-symbols-outlined text-[18px] animate-spin">refresh</span>'
+      : '<span class="material-symbols-outlined text-[18px]">' + icon + '</span>';
+    testCallBtn.innerHTML = iconHtml + '<span>' + label + '</span>';
+  }
+
+  function resetTestCall() {
+    state.testCallBusy = false;
+    if (testCallBtn) {
+      testCallBtn.classList.remove('opacity-50', 'pointer-events-none');
+      setTestCallContent('ring_volume', 'Тестовый прозвон', false);
+    }
+  }
+
+  function onTestCall() {
+    if (state.testCallBusy || !testCallBtn) { return; }
+    state.testCallBusy = true;
+    testCallBtn.classList.add('opacity-50', 'pointer-events-none');
+    setTestCallContent('refresh', 'НАБОР НОМЕРА...', true);
+    if (testCallFeedback) { testCallFeedback.classList.add('hidden'); }
+    hideBanner();
+
+    var showQueued = function () {
+      setTestCallContent('check_circle', 'ЗВОНОК В ОЧЕРЕДИ', false);
+      if (testCallFeedback) { testCallFeedback.classList.remove('hidden'); }
+      if (state.testCallTimer) { clearTimeout(state.testCallTimer); }
+      state.testCallTimer = setTimeout(resetTestCall, 5000);
+    };
+    var fail = function (err) {
+      resetTestCall();
+      var text = 'Не удалось поставить звонок в очередь — попробуйте позже.';
+      if (err && err.code === 'TEST_CALL_TOO_OFTEN') { text = err.message || text; }
+      else if (err && err.status === 401) { text = 'Сессия истекла. Подтвердите номер заново.'; }
+      else if (err && err.code) { text = err.message || text; }
+      setBanner(text, true);
+    };
+
+    if (DEMO || !Api || !Api.testCall) {
+      state.testCallTimer = setTimeout(showQueued, 1200);
+      return;
+    }
+    if (!Api.getToken || !Api.getToken()) { fail({ status: 401 }); return; }
+    Api.testCall().then(showQueued).catch(fail);
   }
 
   var storedAirport = readSession('safesky.airport') || qs.get('airport');
@@ -672,6 +814,20 @@
   });
   if (logoutBtn) { logoutBtn.addEventListener('click', logout); }
   if (bannerRetry) { bannerRetry.addEventListener('click', loadProfile); }
+  if (testCallBtn) { testCallBtn.addEventListener('click', onTestCall); }
+  if (callsToggle) { callsToggle.addEventListener('change', onCallsToggle); }
+  if (callsConfirmCheck && callsConfirmBtn) {
+    callsConfirmCheck.addEventListener('change', function () {
+      callsConfirmBtn.disabled = !callsConfirmCheck.checked;
+    });
+    callsConfirmBtn.addEventListener('click', onCallsConfirm);
+  }
+  if (callsConfirmCancel) {
+    callsConfirmCancel.addEventListener('click', function () {
+      closeCallsConfirm();
+      setCallsStatus('');
+    });
+  }
 
   setPhone(DEMO ? demoPhone() : '');
   renderList();
