@@ -4,6 +4,7 @@ import type { RequestHandler } from "express";
 import { config } from "../config";
 import { db } from "../db";
 import { ApiError } from "../lib/errors";
+import { normalizePhone } from "../lib/phone";
 import { asyncHandler } from "../middleware/error";
 import { requireAuth } from "../middleware/auth";
 
@@ -59,6 +60,18 @@ router.post(
     const user = await db.user.findUnique({ where: { id: userId } });
     if (!user) {
       throw new ApiError(401, "UNAUTHORIZED", "Пользователь не найден — войдите заново");
+    }
+    // SAF-247 (G-CALL-2, fail-closed): пока очередь и БД живут вне РФ
+    // (Render Postgres, Франкфурт), номер абонента не должен попадать в
+    // CallJob без явного допуска. Проверка ДО db.callJob.create — при отказе
+    // номер в БД не пишется вовсе. Порядок в цепочке гейтов: согласие
+    // (callsEnabled, SAF-244) → белый список (этот гейт) → запись в очередь.
+    if (config.testCallAllowlist.length === 0) {
+      throw new ApiError(503, "TEST_CALL_DISABLED", "Тестовый прозвон выключен — белый список номеров не настроен");
+    }
+    const normalizedPhone = normalizePhone(user.phone);
+    if (!normalizedPhone || !config.testCallAllowlist.includes(normalizedPhone)) {
+      throw new ApiError(403, "TEST_CALL_NOT_ALLOWED", "Номер не допущен к тестовому прозвону");
     }
     const job = await db.callJob.create({ data: { userId, phone: user.phone } });
     res.status(202).json({ ok: true, status: "queued", jobId: job.id });

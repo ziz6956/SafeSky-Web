@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { normalizePhone } from "./lib/phone";
 
 export interface Config {
   nodeEnv: "production" | "development" | string;
@@ -12,6 +13,9 @@ export interface Config {
   plusofonWebhookSecret: string;
   flashCallbackBaseUrl: string;
   workerToken: string;
+  // SAF-247 (G-CALL-2): белый список номеров для тестового прозвона (E.164,
+  // нормализованные). Пустой — прозвон выключен (fail-closed).
+  testCallAllowlist: string[];
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -64,6 +68,19 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   // (POST /api/test-call отвечает 503, чтобы звонок не завис в очереди навсегда).
   const workerToken = env.WORKER_TOKEN ?? "";
 
+  // SAF-247 (G-CALL-2, fail-closed): TEST_CALL_ALLOWLIST — CSV номеров,
+  // допущенных к тестовому прозвону. Каждый элемент нормализуется в E.164
+  // через normalizePhone (непохожие на номер — отбрасываются). Пока очередь
+  // и БД живут вне РФ (Render Postgres, Франкфурт), номер абонента не должен
+  // попадать в CallJob без явного допуска; пустое значение (дефолт) выключает
+  // прозвон целиком — POST /api/test-call отвечает 503 до записи в БД.
+  const testCallAllowlist = (env.TEST_CALL_ALLOWLIST ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map(normalizePhone)
+    .filter((p): p is string => p !== null);
+
   return {
     nodeEnv,
     port,
@@ -76,6 +93,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     plusofonWebhookSecret,
     flashCallbackBaseUrl,
     workerToken,
+    testCallAllowlist,
   };
 }
 

@@ -1,11 +1,13 @@
 // Тесты маршрутов тестового прозвонка (SAF-234/235, очередь SIP-воркера):
-// POST /api/test-call — авторизация, постановка в очередь, лимит «3 за 10 минут»;
+// POST /api/test-call — авторизация, постановка в очередь, лимит «3 за 10 минут»,
+// гейт белого списка TEST_CALL_ALLOWLIST (SAF-247, G-CALL-2: 503/403 fail-closed);
 // GET /queue/poll — токен воркера, клейм, пустая очередь, гонка двух воркеров;
 // POST /queue/:id/result — терминальный статус, иммутабельность (SAF-198).
 import express from "express";
 import jwt from "jsonwebtoken";
 import type { Server } from "node:http";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { config } from "../config";
 import { errorHandler } from "../middleware/error";
 import testCallRouter from "./test-call";
 
@@ -14,16 +16,25 @@ const USER_ID = "user-1";
 // Моки и env застаблены ДО статических импортов выше: vi.mock/vi.hoisted
 // всплывают наверх файла, поэтому роутер получает мок-БД, а config —
 // тестовый env (в песочнице NODE_ENV=production, в проде без секретов
-// конфиг падает).
-const { dbUserFindUnique, dbCallJobCreate, dbCallJobFindFirst, dbCallJobUpdateMany, TEST_SECRET, WORKER_TOKEN } =
-  vi.hoisted(() => ({
-    dbUserFindUnique: vi.fn(),
-    dbCallJobCreate: vi.fn(),
-    dbCallJobFindFirst: vi.fn(),
-    dbCallJobUpdateMany: vi.fn(),
-    TEST_SECRET: "test-jwt-secret",
-    WORKER_TOKEN: "test-worker-token",
-  }));
+// конфиг падает). TEST_CALL_ALLOWLIST стабится до импорта config, т.к.
+// config читает env один раз при загрузке модуля.
+const {
+  dbUserFindUnique,
+  dbCallJobCreate,
+  dbCallJobFindFirst,
+  dbCallJobUpdateMany,
+  TEST_SECRET,
+  WORKER_TOKEN,
+  TEST_CALL_ALLOWLIST,
+} = vi.hoisted(() => ({
+  dbUserFindUnique: vi.fn(),
+  dbCallJobCreate: vi.fn(),
+  dbCallJobFindFirst: vi.fn(),
+  dbCallJobUpdateMany: vi.fn(),
+  TEST_SECRET: "test-jwt-secret",
+  WORKER_TOKEN: "test-worker-token",
+  TEST_CALL_ALLOWLIST: "+79991234567",
+}));
 vi.mock("../db", () => ({
   db: {
     user: { findUnique: dbUserFindUnique },
@@ -38,7 +49,13 @@ vi.hoisted(() => {
   vi.stubEnv("NODE_ENV", "test");
   vi.stubEnv("JWT_SECRET", TEST_SECRET);
   vi.stubEnv("WORKER_TOKEN", WORKER_TOKEN);
+  vi.stubEnv("TEST_CALL_ALLOWLIST", TEST_CALL_ALLOWLIST);
 });
+
+// Гейт читает config.testCallAllowlist в рантайме (config — синглтон, env
+// после импорта не перечитывается), поэтому кейсы с другим списком
+// переставляют поле напрямую и возвращают исходное в afterEach.
+const DEFAULT_ALLOWLIST = config.testCallAllowlist;
 
 let server: Server;
 let baseUrl: string;
@@ -75,6 +92,7 @@ afterAll(async () => {
 
 afterEach(() => {
   vi.clearAllMocks();
+  config.testCallAllowlist = DEFAULT_ALLOWLIST;
 });
 
 describe("POST /api/test-call", () => {
@@ -126,6 +144,72 @@ describe("POST /api/test-call", () => {
     expect(last).not.toBeNull();
     expect(last!.status).toBe(429);
     expect(await last!.json()).toMatchObject({ error: "TEST_CALL_TOO_OFTEN" });
+  });
+});
+
+// SAF-247 (G-CALL-2): гейт белого списка, fail-closed. Каждый кейс — свой
+// userId, чтобы rate-limit («3 за 10 минут», ключ — userId) не мешал.
+describe("POST /api/test-call — гейт белого списка (SAF-247)", () => {
+  it("allowlist пуст → 503 TEST_CALL_DISABLED, номер в БД не пишется", async () => {
+    const uid = "user-allowlist-empty";
+    dbUserFindUnique.mockResolvedValue({ id: uid, phone: "+79991234567" });
+    config.testCallAllowlist = [];
+
+    const res = await fetch(`${baseUrl}/api/test-call`, {
+      method: "POST",
+      headers: authHeader(uid),
+    });
+
+    expect(res.status).toBe(503);
+    expect(await res.json()).toMatchObject({ error: "TEST_CALL_DISABLED" });
+    expect(dbCallJobCreate).not.toHaveBeenCalled();
+  });
+
+  it("номер вне списка → 403 TEST_CALL_NOT_ALLOWED, номер в БД не пишется", async () => {
+    const uid = "user-allowlist-out";
+    dbUserFindUnique.mockResolvedValue({ id: uid, phone: "+79991234567" });
+    config.testCallAllowlist = ["+79998887766"];
+
+    const res = await fetch(`${baseUrl}/api/test-call`, {
+      method: "POST",
+      headers: authHeader(uid),
+    });
+
+    expect(res.status).toBe(403);
+    expect(await res.json()).toMatchObject({ error: "TEST_CALL_NOT_ALLOWED" });
+    expect(dbCallJobCreate).not.toHaveBeenCalled();
+  });
+
+  it("номер не нормализуется (не E.164) → 403, номер в БД не пишется", async () => {
+    const uid = "user-allowlist-nonorm";
+    dbUserFindUnique.mockResolvedValue({ id: uid, phone: "12345" });
+
+    const res = await fetch(`${baseUrl}/api/test-call`, {
+      method: "POST",
+      headers: authHeader(uid),
+    });
+
+    expect(res.status).toBe(403);
+    expect(await res.json()).toMatchObject({ error: "TEST_CALL_NOT_ALLOWED" });
+    expect(dbCallJobCreate).not.toHaveBeenCalled();
+  });
+
+  it("номер в списке после нормализации формата → 202 queued", async () => {
+    const uid = "user-allowlist-ok";
+    // Формат отличается от записи в списке — гейт сравнивает нормализованные.
+    dbUserFindUnique.mockResolvedValue({ id: uid, phone: "8 999 123-45-67" });
+    dbCallJobCreate.mockResolvedValue({ id: "job-1", status: "pending" });
+
+    const res = await fetch(`${baseUrl}/api/test-call`, {
+      method: "POST",
+      headers: authHeader(uid),
+    });
+
+    expect(res.status).toBe(202);
+    expect(await res.json()).toMatchObject({ ok: true, status: "queued", jobId: "job-1" });
+    expect(dbCallJobCreate).toHaveBeenCalledWith({
+      data: { userId: uid, phone: "8 999 123-45-67" },
+    });
   });
 });
 
