@@ -16,7 +16,7 @@ model User {
   id           String   @id @default(cuid())
   phone        String   @unique // E.164: +79XXXXXXXXX
   airport      String   @default("DME") // IATA-код домашнего аэропорта
-  callsEnabled Boolean  @default(true) // тумблер «Уведомлять звонком»
+  callsEnabled Boolean  @default(false) // тумблер «Уведомлять звонком»; fail-closed (SAF-244 F1): без активного согласия вызовы не включаются
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

@@ -3,6 +3,7 @@ import { Router } from "express";
 import type { RequestHandler } from "express";
 import { config } from "../config";
 import { db } from "../db";
+import { CONSENT_ACTION } from "../lib/consent";
 import { ApiError } from "../lib/errors";
 import { asyncHandler } from "../middleware/error";
 import { requireAuth } from "../middleware/auth";
@@ -60,10 +61,16 @@ router.post(
     if (!user) {
       throw new ApiError(401, "UNAUTHORIZED", "Пользователь не найден — войдите заново");
     }
-    // SAF-244 (G-CALL-4): без действующего согласия задания не ставим.
-    // callsEnabled=false — отказ абонента (запись revoke в call_consents),
-    // очередь для него не пополняется.
-    if (user.callsEnabled !== true) {
+    // SAF-244 (G-CALL-4): ворота постановки задания — последняя запись журнала
+    // согласий (доказательство по ч. 1 ст. 44.1-1 126-ФЗ, ч. 3 ст. 9 152-ФЗ).
+    // Тумблер callsEnabled — операционное состояние, доказательством не
+    // является (Legal-ревью SAF-244, F2), поэтому проверяем оба и fail-closed:
+    // нет записи grant или любое расхождение журнала с флагом — задания не ставим.
+    const lastConsent = await db.callConsent.findFirst({
+      where: { userId },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    });
+    if (user.callsEnabled !== true || lastConsent?.action !== CONSENT_ACTION.GRANT) {
       throw new ApiError(409, "CALLS_DISABLED", "Вызовы отключены — включите звонки в личном кабинете");
     }
     const job = await db.callJob.create({ data: { userId, phone: user.phone } });

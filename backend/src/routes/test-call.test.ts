@@ -15,9 +15,10 @@ const USER_ID = "user-1";
 // всплывают наверх файла, поэтому роутер получает мок-БД, а config —
 // тестовый env (в песочнице NODE_ENV=production, в проде без секретов
 // конфиг падает).
-const { dbUserFindUnique, dbCallJobCreate, dbCallJobFindFirst, dbCallJobUpdateMany, TEST_SECRET, WORKER_TOKEN } =
+const { dbUserFindUnique, dbCallConsentFindFirst, dbCallJobCreate, dbCallJobFindFirst, dbCallJobUpdateMany, TEST_SECRET, WORKER_TOKEN } =
   vi.hoisted(() => ({
     dbUserFindUnique: vi.fn(),
+    dbCallConsentFindFirst: vi.fn(),
     dbCallJobCreate: vi.fn(),
     dbCallJobFindFirst: vi.fn(),
     dbCallJobUpdateMany: vi.fn(),
@@ -27,6 +28,7 @@ const { dbUserFindUnique, dbCallJobCreate, dbCallJobFindFirst, dbCallJobUpdateMa
 vi.mock("../db", () => ({
   db: {
     user: { findUnique: dbUserFindUnique },
+    callConsent: { findFirst: dbCallConsentFindFirst },
     callJob: {
       create: dbCallJobCreate,
       findFirst: dbCallJobFindFirst,
@@ -86,6 +88,7 @@ describe("POST /api/test-call", () => {
 
   it("ставит задание в очередь и отдаёт 202 queued", async () => {
     dbUserFindUnique.mockResolvedValue({ id: USER_ID, phone: "+79991234567", callsEnabled: true });
+    dbCallConsentFindFirst.mockResolvedValue({ action: "grant" });
     dbCallJobCreate.mockResolvedValue({ id: "job-1", status: "pending" });
 
     const res = await fetch(`${baseUrl}/api/test-call`, {
@@ -113,6 +116,7 @@ describe("POST /api/test-call", () => {
   });
   it("вызовы отключены (отказ, SAF-244) — 409 CALLS_DISABLED, задание не ставится", async () => {
     dbUserFindUnique.mockResolvedValue({ id: USER_ID, phone: "+79991234567", callsEnabled: false });
+    dbCallConsentFindFirst.mockResolvedValue({ action: "revoke" });
 
     const res = await fetch(`${baseUrl}/api/test-call`, {
       method: "POST",
@@ -124,8 +128,48 @@ describe("POST /api/test-call", () => {
     expect(dbCallJobCreate).not.toHaveBeenCalled();
   });
 
+  it("нет записи согласия в журнале — 409 CALLS_DISABLED (fail-closed, SAF-244 F2)", async () => {
+    // Пользователь, созданный до SAF-244: флаг true, но доказательства нет —
+    // юридически согласия нет, поэтому задание не ставим (ч. 1 ст. 44.1-1).
+    // Отдельный userId — своя корзина rate-limiter'а (лимит 3/10 мин на ключ).
+    const userId = "user-f2-no-record";
+    dbUserFindUnique.mockResolvedValue({ id: userId, phone: "+79991234567", callsEnabled: true });
+    dbCallConsentFindFirst.mockResolvedValue(null);
+
+    const res = await fetch(`${baseUrl}/api/test-call`, {
+      method: "POST",
+      headers: authHeader(userId),
+    });
+
+    expect(res.status).toBe(409);
+    expect(await res.json()).toMatchObject({ error: "CALLS_DISABLED" });
+    expect(dbCallJobCreate).not.toHaveBeenCalled();
+  });
+
+  it("последняя запись revoke при callsEnabled=true — 409 (журнал главный, SAF-244 F2)", async () => {
+    // Инвариант «callsEnabled = (последняя запись = grant)» нарушен (флаг изменён
+    // в обход /api/settings) — ворота fail-closed: расхождение блокирует задание.
+    const userId = "user-f2-revoke";
+    dbUserFindUnique.mockResolvedValue({ id: userId, phone: "+79991234567", callsEnabled: true });
+    dbCallConsentFindFirst.mockResolvedValue({ action: "revoke" });
+
+    const res = await fetch(`${baseUrl}/api/test-call`, {
+      method: "POST",
+      headers: authHeader(userId),
+    });
+
+    expect(res.status).toBe(409);
+    expect(await res.json()).toMatchObject({ error: "CALLS_DISABLED" });
+    expect(dbCallJobCreate).not.toHaveBeenCalled();
+    expect(dbCallConsentFindFirst).toHaveBeenCalledWith({
+      where: { userId },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    });
+  });
+
   it("лимит: 4-й запрос за 10 минут — 429 TEST_CALL_TOO_OFTEN", async () => {
     dbUserFindUnique.mockResolvedValue({ id: USER_ID, phone: "+79991234567", callsEnabled: true });
+    dbCallConsentFindFirst.mockResolvedValue({ action: "grant" });
     dbCallJobCreate.mockResolvedValue({ id: "job-1", status: "pending" });
 
     let last = null;
