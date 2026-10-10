@@ -7,6 +7,7 @@ import { config } from "../config";
 import { JWT_TTL_SEC } from "../constants";
 import { db } from "../db";
 import { ApiError } from "../lib/errors";
+import { CONSENT_CHANNEL, grantConsentData } from "../lib/consent";
 import { publicUser } from "../lib/user";
 import { asyncHandler } from "../middleware/error";
 import { createSmsProvider } from "../sms";
@@ -68,12 +69,31 @@ router.post(
 
 // POST /api/auth/verify-code — проверка кода, создание пользователя, выдача JWT.
 // 425 CODE_PENDING — Flash Call ещё не доставлен (попытки не сгорают).
+// SAF-244: callsConsent — отдельное согласие на автоматические вызовы (не ПДн).
+// При создании пользователя пишем запись-доказательство в call_consents той же
+// транзакцией (ч. 1 ст. 44.1-1 126-ФЗ: без записи согласия юридически нет).
+// Нет флага или false — вызовы остаются выключены (fail-closed).
 router.post(
   "/verify-code",
   verifyCodeLimiter,
   asyncHandler(async (req, res) => {
-    const { phone, code } = (req.body ?? {}) as { phone?: unknown; code?: unknown };
-    const user = await verifyCode(db, config.jwtSecret, String(phone ?? ""), String(code ?? ""));
+    const body = (req.body ?? {}) as { phone?: unknown; code?: unknown; callsConsent?: unknown };
+    let callsConsent = false;
+    if (body.callsConsent !== undefined) {
+      if (typeof body.callsConsent !== "boolean") {
+        throw new ApiError(400, "INVALID_BODY", "callsConsent должен быть boolean");
+      }
+      callsConsent = body.callsConsent;
+    }
+    const phone = String(body.phone ?? "");
+    const code = String(body.code ?? "");
+    const user = await db.$transaction(async (tx) => {
+      const { user: u, created } = await verifyCode(tx, config.jwtSecret, phone, code, { callsConsent });
+      if (created && callsConsent) {
+        await tx.callConsent.create({ data: grantConsentData(req, u.id, u.phone, CONSENT_CHANNEL.WEB_FORM) });
+      }
+      return u;
+    });
     const token = signToken(user.id, config.jwtSecret, JWT_TTL_SEC);
     res.json({ ok: true, token, user: publicUser(user) });
   }),

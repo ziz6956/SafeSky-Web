@@ -85,7 +85,7 @@ describe("POST /api/test-call", () => {
   });
 
   it("ставит задание в очередь и отдаёт 202 queued", async () => {
-    dbUserFindUnique.mockResolvedValue({ id: USER_ID, phone: "+79991234567" });
+    dbUserFindUnique.mockResolvedValue({ id: USER_ID, phone: "+79991234567", callsEnabled: true });
     dbCallJobCreate.mockResolvedValue({ id: "job-1", status: "pending" });
 
     const res = await fetch(`${baseUrl}/api/test-call`, {
@@ -111,9 +111,21 @@ describe("POST /api/test-call", () => {
     expect(res.status).toBe(401);
     expect(dbCallJobCreate).not.toHaveBeenCalled();
   });
+  it("вызовы отключены (отказ, SAF-244) — 409 CALLS_DISABLED, задание не ставится", async () => {
+    dbUserFindUnique.mockResolvedValue({ id: USER_ID, phone: "+79991234567", callsEnabled: false });
+
+    const res = await fetch(`${baseUrl}/api/test-call`, {
+      method: "POST",
+      headers: authHeader(USER_ID),
+    });
+
+    expect(res.status).toBe(409);
+    expect(await res.json()).toMatchObject({ error: "CALLS_DISABLED" });
+    expect(dbCallJobCreate).not.toHaveBeenCalled();
+  });
 
   it("лимит: 4-й запрос за 10 минут — 429 TEST_CALL_TOO_OFTEN", async () => {
-    dbUserFindUnique.mockResolvedValue({ id: USER_ID, phone: "+79991234567" });
+    dbUserFindUnique.mockResolvedValue({ id: USER_ID, phone: "+79991234567", callsEnabled: true });
     dbCallJobCreate.mockResolvedValue({ id: "job-1", status: "pending" });
 
     let last = null;

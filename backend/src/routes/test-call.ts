@@ -60,6 +60,12 @@ router.post(
     if (!user) {
       throw new ApiError(401, "UNAUTHORIZED", "Пользователь не найден — войдите заново");
     }
+    // SAF-244 (G-CALL-4): без действующего согласия задания не ставим.
+    // callsEnabled=false — отказ абонента (запись revoke в call_consents),
+    // очередь для него не пополняется.
+    if (user.callsEnabled !== true) {
+      throw new ApiError(409, "CALLS_DISABLED", "Вызовы отключены — включите звонки в личном кабинете");
+    }
     const job = await db.callJob.create({ data: { userId, phone: user.phone } });
     res.status(202).json({ ok: true, status: "queued", jobId: job.id });
   }),
