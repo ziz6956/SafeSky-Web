@@ -35,7 +35,9 @@ IP-адрес»**. Белый список IP в ЛК (SIP-аккаунты → 
 на 185.54.49.80/83:5060 не получают ответа при живом ICMP и доступном API
 Plusofon — SIP-грань фильтрует иностранные IP. Вывод: софтфон должен жить на
 хосте с РФ-IP (кандидат — РФ-VPS «Ерус-7502-3», прод-хост по SAF-86).
-Hetzner-инстанс ниже остаётся как dev-песочница для кода/очереди.
+Hetzner-инстанс ниже остаётся как dev-песочница для кода. **Опрос очереди на
+не-РФ хосте выключен** (ч. 5 ст. 18 152-ФЗ: SAF-240 §4, G-CALL-2, SAF-246) —
+в env он не рендерится по умолчанию (см. «Переменные и секреты»).
 
 ## Выбор инстанса: CPX22 (обоснование)
 
@@ -68,9 +70,10 @@ audio/       — .gitkeep; WAV кладётся локально перед пр
 |---|---|---|
 | `HCLOUD_TOKEN` | локальный shell у того, кто гоняет terraform (НЕ Render — рантайму он не нужен; в будущем — GitHub Actions secret, когда включим CI) | токен Hetzner Cloud API; hcloud-провайдер читает его автоматически |
 | `TF_VAR_ssh_public_key` | локальный shell | публичный SSH-ключ управления |
-| `SIP_LOGIN`, `SIP_PASSWORD` | env при запуске Ansible → `/etc/safesky-softphone/env` (0600) на сервере | учётные данные SIP-аккаунта Plusofon |
+| `SIP_LOGIN`, `SIP_PASSWORD` | env при запуске Ansible → `/etc/safesky-softphone/env` (0600) на сервере | учётные данные SIP-аккаунта Plusofon. **Без них env-файл на сервере не перезаписывается** (SAF-251) |
 | `SIP_SERVER` | env при запуске Ansible → env-файл на сервере | персональный адрес из ЛК Plusofon: `<аккаунт>.voice.plusofon.ru` («sip.plusofon.ru» не существует — SAF-235) |
-| `QUEUE_BASE_URL`, `WORKER_TOKEN` | env при запуске Ansible → env-файл на сервере | очередь Render: базовый URL бэкенда + Bearer-токен эндпоинтов `/api/test-call/queue/*` |
+| `QUEUE_ENABLED` | env при запуске Ansible (опционально, по умолчанию `false`) | осознанное включение очереди в env. **Только на РФ-хосте**: на не-РФ хосте опрос очереди запрещён ч. 5 ст. 18 152-ФЗ (SAF-240 §4, G-CALL-2, SAF-246). Без `QUEUE_ENABLED=true` строки `QUEUE_BASE_URL`/`WORKER_TOKEN` в env закомментированы (SAF-251) |
+| `QUEUE_BASE_URL`, `WORKER_TOKEN` | env при запуске Ansible → env-файл на сервере (только при `QUEUE_ENABLED=true`) | очередь Render: базовый URL бэкенда + Bearer-токен эндпоинтов `/api/test-call/queue/*` |
 | `PLUSOFON_API_TOKEN` | env при запуске Ansible (опционально) | создание SIP-аккаунта через API (`bootstrap_sip.py`) |
 
 Секреты в репозиторий и комментарии не попадают — только имена.
@@ -95,10 +98,23 @@ audio/       — .gitkeep; WAV кладётся локально перед пр
    cp hosts.ini.example hosts.ini      # подставить IP из шага 2
    export SIP_LOGIN=... SIP_PASSWORD=...       # из bootstrap или ЛК Plusofon
    export SIP_SERVER=<аккаунт>.voice.plusofon.ru   # из ЛК Plusofon
+   ansible-playbook -i hosts.ini playbook.yml
+   ```
+   Прогон без SIP-секретов env-файл на сервере не трогает (SAF-251) — так можно
+   обновлять код воркера, не имея кредов SIP. На свежем узле без env-файла
+   прогон с пустыми секретами падает assert'ом (fail-closed).
+
+   **Очередь (только на РФ-хосте, осознанно):**
+   ```bash
+   export QUEUE_ENABLED=true
    export QUEUE_BASE_URL=https://safesky-web.onrender.com
    export WORKER_TOKEN=...
    ansible-playbook -i hosts.ini playbook.yml
    ```
+   На не-РФ хосте опрос очереди запрещён ч. 5 ст. 18 152-ФЗ (SAF-240 §4,
+   G-CALL-2, SAF-246): без `QUEUE_ENABLED=true` строки очереди в env
+   закомментированы.
+
    Если `PLUSOFON_API_TOKEN` задан, плейбук сам создаст SIP-аккаунт
    `safesky-softphone` через API (`PUT /api/v1/sip` + `PATCH` пароля) и выведет
    логин. Иначе аккаунт создаётся в ЛК Plusofon вручную.
