@@ -21,6 +21,7 @@ SIP-регистрация в Plusofon → исходящий звонок → �
 import argparse
 import json
 import os
+import re
 import socket
 import sys
 import threading
@@ -57,13 +58,39 @@ def wav_duration(path: str) -> float:
         return w.getnframes() / float(w.getframerate())
 
 
+def mask_phone(phone: str) -> str:
+    """+7 (9**) ***-**-99 — номер не должен попадать в журнал в открытом виде (SAF-246).
+
+    Журнал воркера — на не-РФ хосте (Hetzner, fsn1); ч. 5 ст. 18 152-ФЗ запрещает
+    накопление ПДн граждан РФ вне территории РФ, поэтому в service-журнал уходит
+    только маска. Функция не бросает исключений: она же маскирует номера,
+    которые не прошли normalize_phone.
+    """
+    digits = "".join(ch for ch in (phone or "") if ch.isdigit())
+    if len(digits) < 4:
+        return "***"
+    return f"+{digits[0]} ({digits[1]}**) ***-**-{digits[-2:]}"
+
+
+_PHONE_RE = re.compile(r"\b[78]\d{10}\b")
+
+
+def redact(text: str) -> str:
+    """Маскировать любые 11-значные номера (7XXXXXXXXXX / 8XXXXXXXXXX) в тексте.
+
+    Тексты исключений pjsua2 могут включать Request-URI; перечислить все такие
+    места нельзя, поэтому маскируем по шаблону (SAF-246).
+    """
+    return _PHONE_RE.sub(lambda m: mask_phone(m.group(0)), text)
+
+
 def normalize_phone(phone: str) -> str:
     """79991234567 — международный формат без '+'."""
     digits = "".join(ch for ch in phone if ch.isdigit())
     if digits.startswith("8") and len(digits) == 11:
         digits = "7" + digits[1:]
     if len(digits) != 11 or not digits.startswith("7"):
-        raise ValueError(f"номер не в формате 79XXXXXXXXX: {phone!r}")
+        raise ValueError(f"номер не в формате 79XXXXXXXXX: {mask_phone(phone)}")
     return digits
 
 
@@ -136,6 +163,9 @@ def init_endpoint() -> pj.Endpoint:
     ep_cfg.uaConfig.maxCalls = 1  # прототип: 1 одновременный звонок
     ep_cfg.logConfig.level = 4
     ep_cfg.logConfig.consoleLevel = 2
+    # SAF-246: дамп SIP-сообщений печатает INVITE с Request-URI, то есть номер
+    # в открытом виде, в stdout → journald на не-РФ хосте. Выключаем дамп.
+    ep_cfg.logConfig.msgLogging = 0
     ep = pj.Endpoint()
     ep.libCreate()
     ep.libInit(ep_cfg)
@@ -165,7 +195,7 @@ def make_test_call(acc: pj.Account, phone: str, wav_path: str) -> PlayCall:
     call = PlayCall(acc, wav_path)
     prm = pj.CallOpParam()
     prm.timeoutSec = CALL_TIMEOUT
-    log(f"вызываю {digits} через {SIP_SERVER}")
+    log(f"вызываю {mask_phone(digits)} через {SIP_SERVER}")
     call.makeCall(uri, prm)
     return call
 
@@ -203,12 +233,12 @@ def poll_once(acc: pj.Account) -> bool:
     if not res or not res.get("job"):
         return False
     job = res["job"]
-    log(f"задание {job['id']}: набираю {job['phone']}")
+    log(f"задание {job['id']}: набираю {mask_phone(job['phone'])}")
     try:
         call = make_test_call(acc, job["phone"], AUDIO_FILE)
         result = wait_call_result(call)
     except Exception as e:  # noqa: BLE001 — статус пишем в очередь при любой ошибке
-        log(f"ошибка звонка: {e}")
+        log(f"ошибка звонка: {redact(str(e))}")
         result = "failed"
     payload = {"status": result}
     if result == "failed":
