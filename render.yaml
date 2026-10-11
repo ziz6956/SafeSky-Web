@@ -31,6 +31,13 @@ services:
         sync: false
       - key: TELEGRAM_BOT_TOKEN
         sync: false
+      - key: WORKER_TOKEN
+        sync: false            # Bearer-токен SIP-воркера (SAF-234/235): /api/test-call/queue/*
+      # SAF-247 (G-CALL-2): белый список номеров тестового прозвона, CSV
+      # («+79991234567,+79997654321»). Значение задаётся только на Render;
+      # пустое значение = прозвон выключен (fail-closed, безопасный дефолт).
+      - key: TEST_CALL_ALLOWLIST
+        sync: false
       # --- Конфиг (не секреты), фиксирован постановкой SAF-206/SAF-219 ---
       - key: CORS_ORIGINS
         value: https://ziz6956.github.io

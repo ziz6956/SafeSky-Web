@@ -25,6 +25,11 @@
 // SafeSkyApi.patchSettings({ airport?, callsEnabled? }) → { user }
 //   (Bearer-токен подставляется автоматически; 401 UNAUTHORIZED — показать вход)
 //
+// SafeSkyApi.testCall() → { ok: true, status: "queued", jobId }
+//   Тестовый прозвон (SAF-234/235): задание ставится в очередь call_jobs,
+//   звонит SIP-воркер (pjsua2 + Plusofon) вне Render.
+//   Ошибки: 401 UNAUTHORIZED · 429 TEST_CALL_TOO_OFTEN · 503 TEST_CALL_UNAVAILABLE
+//
 // Во всех ошибках: err.code — машинный код (см. выше), err.message — текст для человека.
 (function (global) {
   "use strict";
@@ -90,6 +95,9 @@
     },
     patchSettings: function (patch) {
       return request("/api/settings", { method: "PATCH", body: patch });
+    },
+    testCall: function () {
+      return request("/api/test-call", { method: "POST" });
     },
     getToken: getToken,
     clearToken: clearToken,
