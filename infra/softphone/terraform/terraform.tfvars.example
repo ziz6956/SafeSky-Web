@@ -1,0 +1,12 @@
+# Пример. Скопировать в terraform.tfvars (НЕ коммитить) или передать через
+# переменные окружения: TF_VAR_ssh_public_key, TF_VAR_ssh_allowed_ips.
+
+# Публичный SSH-ключ того, кто будет запускать Ansible (id_ed25519.pub).
+ssh_public_key = "ssh-ed25519 AAAA... example@host"
+
+# Кому разрешён SSH. Сузить до своего IP/CIDR:
+# ssh_allowed_ips = ["203.0.113.7/32"]
+
+# Токен Hetzner передаётся ТОЛЬКО через переменную окружения HCLOUD_TOKEN:
+#   export HCLOUD_TOKEN=...
+#   terraform plan / apply

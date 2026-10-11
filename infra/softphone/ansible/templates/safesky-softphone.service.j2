@@ -1,0 +1,17 @@
+[Unit]
+Description=SafeSky softphone worker (pjsua2, Plusofon SIP)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=safesky
+EnvironmentFile=/etc/safesky-softphone/env
+ExecStart=/usr/bin/python3 {{ deploy_dir }}/worker.py
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
