@@ -53,7 +53,9 @@ if [ -n "$CODE" ]; then
   echo "== 7. новый код (после 30с паузы или на новый номер) + verify успешный =="
   sleep 31
   req POST /api/auth/request-code "{\"phone\":\"${PHONE}\"}" >/dev/null
-  code=$(req POST /api/auth/verify-code "{\"phone\":\"${PHONE}\",\"code\":\"${CODE}\"}")
+  # callsConsent:true — согласие на автоматические вызовы (SAF-244):
+  # при создании пользователя пишется запись-доказательство в call_consents.
+  code=$(req POST /api/auth/verify-code "{\"phone\":\"${PHONE}\",\"code\":\"${CODE}\",\"callsConsent\":true}")
   echo "HTTP ${code}: $(cat /tmp/smoke_body)"
   [ "$code" = "200" ] || { echo "FAIL: verify ok"; exit 1; }
   TOKEN=$(python3 -c "import json;print(json.load(open('/tmp/smoke_body'))['token'])")

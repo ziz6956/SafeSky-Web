@@ -548,6 +548,12 @@ void main() {
               Согласен на обработку персональных данных
             </span>
 </label>
+<label class="flex items-start gap-space-sm cursor-pointer mt-space-xs">
+<input class="mt-1 accent-[#D4FF00] rounded cursor-pointer" id="calls-consent-input" name="calls-consent" required type="checkbox"/>
+<span class="font-body-md text-body-md text-text-secondary leading-snug">
+              Я согласен получать автоматические телефонные вызовы от сервиса SafeSky на указанный номер — для подтверждения номера и для доставки уведомлений; понимаю, что вызовы совершаются автоматически, с воспроизведением записанного сообщения. Я могу отказаться в любой момент в личном кабинете — вызовы прекращаются не позднее следующего дня.
+            </span>
+</label>
 <p class="font-body-md text-body-md text-text-secondary mt-1">
               Номер телефона нужен, чтобы позвонить и подтвердить его, создать и обслуживать вашу учётную запись.
               Для доставки SMS и совершения звонков номер передаётся оператору связи. Согласие можно отозвать в личном кабинете.
@@ -622,6 +628,7 @@ void main() {
     const connectForm = document.getElementById('connect-form');
     if (connectForm) {
       const consent = document.getElementById('consent-input');
+      const callsConsent = document.getElementById('calls-consent-input');
       const alertBox = document.getElementById('connect-alert');
       const alertText = document.getElementById('connect-alert-text');
 
@@ -633,6 +640,7 @@ void main() {
 
       phoneInput.addEventListener('input', clearAlert);
       if (consent) consent.addEventListener('change', clearAlert);
+      if (callsConsent) callsConsent.addEventListener('change', clearAlert);
 
       connectForm.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -647,8 +655,14 @@ void main() {
           consent.focus();
           return;
         }
+        if (callsConsent && !callsConsent.checked) {
+          showAlert('Отметьте согласие на автоматические вызовы — без него мы не сможем звонить.');
+          callsConsent.focus();
+          return;
+        }
         try {
           sessionStorage.setItem('safesky.phone', phoneInput.value);
+          sessionStorage.setItem('safesky.callsConsent', callsConsent && callsConsent.checked ? '1' : '0');
         } catch (err) { /* приватный режим */ }
         window.location.href = 'code.html';
       });

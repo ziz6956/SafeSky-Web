@@ -266,7 +266,12 @@
         return;
       }
       /* При успехе js/api.js сам сохраняет токен (localStorage safesky_token) */
-      await Api.verifyCode(st.phone, code());
+      /* SAF-244: согласие на автоматические вызовы, данное на форме, передаём
+         серверу — оно фиксируется в БД как доказательство при регистрации. */
+      const callsConsent = (function () {
+        try { return sessionStorage.getItem('safesky.callsConsent') === '1'; } catch (e) { return false; }
+      })();
+      await Api.verifyCode(st.phone, code(), { callsConsent: callsConsent });
       succeed();
       return;
     } catch (e) {
