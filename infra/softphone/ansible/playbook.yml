@@ -4,8 +4,16 @@
 # Секреты передаются через переменные окружения (в файлы не попадают):
 #   export SIP_LOGIN=... SIP_PASSWORD=...                 # учётные данные SIP Plusofon
 #   export SIP_SERVER=...                                 # <аккаунт>.voice.plusofon.ru (из ЛК Plusofon)
-#   export QUEUE_BASE_URL=... WORKER_TOKEN=...            # очередь Render (/api/test-call/queue/*)
 #   export PLUSOFON_API_TOKEN=...                         # опционально: bootstrap_sip.py
+#
+# Очередь Render по умолчанию ВЫКЛЮЧЕНА (queue_enabled=false): опрос очереди
+# на не-РФ хосте запрещён ч. 5 ст. 18 152-ФЗ (SAF-240 §4, G-CALL-2, SAF-246).
+# Включение — осознанное действие, только на РФ-хосте:
+#   export QUEUE_ENABLED=true QUEUE_BASE_URL=... WORKER_TOKEN=...
+#
+# Без SIP_LOGIN/SIP_PASSWORD/SIP_SERVER плейбук НЕ трогает /etc/safesky-softphone/env
+# (рабочие креды узла не затираются пустыми строками — SAF-251). На свежем узле без
+# env-файла прогон с пустыми секретами падает assert'ом (fail-closed).
 #
 # Запуск:
 #   ansible-playbook -i hosts.ini playbook.yml
@@ -22,8 +30,42 @@
     queue_base_url: "{{ lookup('env', 'QUEUE_BASE_URL') | default('', true) }}"
     worker_token: "{{ lookup('env', 'WORKER_TOKEN') | default('', true) }}"
     plusofon_api_token: "{{ lookup('env', 'PLUSOFON_API_TOKEN') | default('', true) }}"
+    # Очередь выключена по умолчанию: на не-РФ хостах её рендер в env запрещён
+    # (SAF-240 §4, G-CALL-2, SAF-246 — опрос очереди Render до переноса на РФ-хост).
+    # QUEUE_ENABLED=true — осознанное включение, только для РФ-хоста.
+    queue_enabled: "{{ lookup('env', 'QUEUE_ENABLED') | default(false, true) | bool }}"
 
   tasks:
+    # SAF-251: env-файл узла не перезаписывается без полного комплекта SIP-секретов
+    # (см. `when` на задаче env-шаблона ниже). На свежем узле (env отсутствует)
+    # пустые секреты — ошибка конфигурации: падаем assert'ом (fail-closed).
+    - name: Проверить наличие env-файла на узле
+      stat:
+        path: /etc/safesky-softphone/env
+      register: env_file_stat
+
+    - name: SIP-секреты обязательны при первичной настройке (fail-closed, SAF-251)
+      assert:
+        that:
+          - sip_login | length > 0
+          - sip_password | length > 0
+          - sip_server | length > 0
+        fail_msg: >-
+          Первичная настройка: /etc/safesky-softphone/env на узле отсутствует,
+          а SIP-секреты не заданы. Задайте SIP_LOGIN, SIP_PASSWORD, SIP_SERVER
+          и повторите прогон (SAF-251).
+      when: not env_file_stat.stat.exists
+
+    - name: Параметры очереди полны, если очередь включена (SAF-251)
+      assert:
+        that:
+          - queue_base_url | length > 0
+          - worker_token | length > 0
+        fail_msg: >-
+          QUEUE_ENABLED=true, но QUEUE_BASE_URL или WORKER_TOKEN не заданы.
+          Очередь включается только на РФ-хосте и только полным комплектом
+          параметров (SAF-240 §4, G-CALL-2, SAF-246).
+      when: queue_enabled | bool
     - name: Обновить индекс пакетов
       apt:
         update_cache: true
@@ -96,6 +138,18 @@
         owner: root
         group: root
         mode: "0600"
+      # SAF-251: без полного комплекта SIP-секретов файл не трогаем — иначе
+      # рабочие креды узла затираются пустыми строками.
+      when: sip_login | length > 0 and sip_password | length > 0 and sip_server | length > 0
+      notify: перезапуск воркера
+
+    - name: Env узла оставлен без изменений (SIP-секреты не заданы)
+      debug:
+        msg: >-
+          SIP_LOGIN/SIP_PASSWORD/SIP_SERVER не заданы в окружении:
+          /etc/safesky-softphone/env оставлен без изменений (SAF-251).
+          Для обновления SIP-кредов задайте секреты и повторите прогон.
+      when: not (sip_login | length > 0 and sip_password | length > 0 and sip_server | length > 0)
 
     - name: systemd-юнит
       template:
