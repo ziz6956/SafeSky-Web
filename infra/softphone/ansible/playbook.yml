@@ -50,6 +50,11 @@
     # без источника звонок не держится в фазе 183. По умолчанию выключен
     # (фикс A1 — источника в конфиге нет вовсе).
     audio_fallback_silence: "{{ lookup('env', 'AUDIO_FALLBACK_SILENCE') | default(false, true) | bool }}"
+    # Адрес слушателя ctrl_tcp baresip. Гвард ниже допускает ТОЛЬКО loopback
+    # (требование SRE, SAF-277): ctrl_tcp не аутентифицирует клиента — на
+    # внешнем интерфейсе это удалённое управление дозвоном (набор номера,
+    # сброс, подмена аудио).
+    ctrl_tcp_listen: "{{ lookup('env', 'CTRL_TCP_LISTEN') | default('127.0.0.1:4444', true) }}"
 
   tasks:
     # SAF-251: env-файл узла не перезаписывается без полного комплекта SIP-секретов
@@ -121,6 +126,18 @@
         fail_msg: >-
           Модуль ctrl_tcp.so не найден в поставке baresip (`dpkg -L baresip`).
           Без него воркер не сможет управлять софтфоном.
+
+    # Гвард SAF-277 (требование SRE): ctrl_tcp не аутентифицирует клиента,
+    # слушать разрешено только loopback. Любое другое значение — fail-closed
+    # до применения конфига.
+    - name: ctrl_tcp — только loopback (fail-closed, SAF-277)
+      assert:
+        that:
+          - "ctrl_tcp_listen.startswith('127.') or ctrl_tcp_listen.startswith('::1') or ctrl_tcp_listen.startswith('[::1]') or ctrl_tcp_listen.startswith('localhost')"
+        fail_msg: >-
+          ctrl_tcp_listen={{ ctrl_tcp_listen }}: разрешён только loopback
+          (127.0.0.1:4444). Открытый ctrl_tcp = удалённое управление дозвоном
+          (набор номера, сброс, подмена аудио) без аутентификации (SAF-277).
 
     - name: Пользователь сервиса
       user:
@@ -278,8 +295,19 @@
         - ufw default allow outgoing
       changed_when: false
 
+    - name: "ufw — ctrl_tcp только loopback: явный deny 4444/tcp снаружи (SAF-277)"
+      command: ufw deny 4444/tcp
+      changed_when: false
+
     - name: ufw — включить
       command: ufw --force enable
+      changed_when: false
+
+    # Часовой пояс хоста — UTC (SAF-277, требование SRE): Уфа = UTC+5, а
+    # quiet hours (SAF-23) и окна алертов команда ведёт в UTC/MSK. Локальную
+    # TZ в юнитах и воркере не использовать.
+    - name: Часовой пояс хоста — UTC (SAF-277)
+      command: timedatectl set-timezone UTC
       changed_when: false
 
     # Опционально: создать SIP-аккаунт Plusofon через API (если задан токен).

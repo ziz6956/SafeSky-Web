@@ -26,8 +26,10 @@ module			ctrl_tcp.so
 # Plusofon — SAF-270). RTP — стандартные 10000–20000/udp.
 sip_listen		0.0.0.0:5060
 
-# Управляющий TCP-сокет для воркера (только loopback — SAF-251).
-ctrl_tcp_listen		127.0.0.1:4444
+# Управляющий TCP-сокет для воркера. ТОЛЬКО loopback: ctrl_tcp не
+# аутентифицирует клиента, на внешнем интерфейсе это удалённое управление
+# дозвоном. Значение гвардится плейбуком (fail-closed, SAF-277).
+ctrl_tcp_listen		{{ ctrl_tcp_listen }}
 
 {% if audio_fallback_silence | bool %}
 # Фикс A2: источник-заглушка, чтобы звонок держался в фазе 183 до ответа.
