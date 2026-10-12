@@ -165,14 +165,45 @@ WAV 16-bit PCM, mono, 8 кГц (родной формат pjsua2), длител�
 `infra/softphone/audio/test-call-ru.wav` и перезапустить плейбук
 (или `systemctl restart safesky-softphone`).
 
+## Харденинг узла (SAF-270)
+
+**ufw — 5060/udp только от SIP-сети Plusofon** (применено на узле 12.10.2026):
+
+```bash
+ufw allow from 185.54.49.80/30 to any port 5060 proto udp   # сигнализация .80/.83, медиа .81/.82
+ufw allow from 151.241.171.225 to any port 5060 proto udp   # входящие INVITE (SAF-269)
+ufw delete <номер широкого правила 5060/udp>                # в т.ч. правило (v6) — см. `ufw status numbered`
+```
+
+Default-политика ufw — `deny (incoming)`, исходящие не затронуты: REGISTER
+наружу работает, входящие INVITE от Plusofon проходят. Правила лежат в
+`/etc/ufw/user.rules`, переживают ребут.
+
+**systemd-юнит — без бесконечного crash-loop.** При недоступной регистрации
+воркер завершается с exit=2; раньше `Restart=always` рестартовал его
+бесконечно. Теперь `Restart=on-failure` + `StartLimitBurst=3` /
+`StartLimitIntervalSec=1800` (в секции `[Unit]`): после трёх неудач за 30 мин
+юнит переходит в `failed`, причина видна в `journalctl -u safesky-softphone`
+(«SIP-регистрация НЕ подтвердилась»). Восстановление вручную:
+
+```bash
+systemctl reset-failed safesky-softphone && systemctl start safesky-softphone
+```
+
 ## Ограничения прототипа и известные TODO
 
 - **1 одновременный звонок** (`maxCalls = 1`): очередь сериализует задания.
 - **Хост с РФ-IP обязателен** для боевого софтфона (правило Plusofon) —
   см. раздел выше; Hetzner-инстанс для боевой регистрации не годится.
-- **Firewall:** SIP/RTP входящие пока открыты на 0.0.0.0/0 — после пуска
-  сузить до IP медиа-серверов Plusofon (185.54.49.80–83, см. справку);
-  SSH сузить до IP исполнителя (`terraform.tfvars` → `ssh_allowed_ips`).
+- **Firewall (SAF-270):** SIP 5060/udp уже сужен до SIP-сети Plusofon —
+  `185.54.49.80/30` (сигнализация .80/.83, медиа .81/.82 по справке «Общие
+  настройки оборудования») и `151.241.171.225` (входящие INVITE, SAF-269);
+  ufw-правила применены на узле вручную (см. «Харденинг узла»), terraform-
+  файрвол обновлён в IaC (применится следующим `terraform apply`).
+  **RTP 10000–20000/udp всё ещё открыт на 0.0.0.0/0** — сузить до медиа-IP
+  Plusofon (185.54.49.81/82) отдельной задачей после прогона тестовых
+  звонков; SSH на уровне узла (ufw) открыт на 0.0.0.0/0, но ограничен
+  Hetzner-файрволом (`terraform.tfvars` → `ssh_allowed_ips`).
 - **SIP через UDP.** Если у провайдера/оператора будут проблемы с NAT —
   переключить воркер на TCP/TLS (`SIP_PORT`, `SIP_LOCAL_PORT` в env-файле).
 - **ПДн:** прототип звонит только на номер владельца (тест). Боевой обзвон с

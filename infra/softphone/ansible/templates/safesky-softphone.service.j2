@@ -2,14 +2,20 @@
 Description=SafeSky softphone worker (pjsua2, Plusofon SIP)
 After=network-online.target
 Wants=network-online.target
+# SAF-270: при недоступной регистрации (exit=2) воркер перезапускается не
+# бесконечно: не чаще StartLimitBurst раз за StartLimitIntervalSec, дальше
+# юнит переходит в failed, факт неуспешной регистрации остаётся в журнале.
+# Восстановление: systemctl reset-failed safesky-softphone && systemctl start safesky-softphone
+StartLimitIntervalSec=1800
+StartLimitBurst=3
 
 [Service]
 Type=simple
 User=safesky
 EnvironmentFile=/etc/safesky-softphone/env
 ExecStart=/usr/bin/python3 {{ deploy_dir }}/worker.py
-Restart=always
-RestartSec=5
+Restart=on-failure
+RestartSec=15
 NoNewPrivileges=true
 ProtectSystem=full
 
