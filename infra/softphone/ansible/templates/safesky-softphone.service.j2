@@ -1,17 +1,18 @@
 [Unit]
-Description=SafeSky softphone worker (pjsua2, Plusofon SIP)
-After=network-online.target
+Description=SafeSky softphone worker (baresip ctrl_tcp, очередь Render)
+After=network-online.target safesky-baresip.service
 Wants=network-online.target
-# SAF-270: при недоступной регистрации (exit=2) воркер перезапускается не
-# бесконечно: не чаще StartLimitBurst раз за StartLimitIntervalSec, дальше
-# юнит переходит в failed, факт неуспешной регистрации остаётся в журнале.
-# Восстановление: systemctl reset-failed safesky-softphone && systemctl start safesky-softphone
+Requires=safesky-baresip.service
+# SAF-270: воркер не рестартует бесконечно — не чаще StartLimitBurst раз за
+# StartLimitIntervalSec, дальше юнит в failed, причина в
+# `journalctl -u safesky-softphone`. Восстановление:
+#   systemctl reset-failed safesky-softphone && systemctl start safesky-softphone
 StartLimitIntervalSec=1800
 StartLimitBurst=3
 
 [Service]
 Type=simple
-User=safesky
+User={{ service_user }}
 EnvironmentFile=/etc/safesky-softphone/env
 ExecStart=/usr/bin/python3 {{ deploy_dir }}/worker.py
 Restart=on-failure
