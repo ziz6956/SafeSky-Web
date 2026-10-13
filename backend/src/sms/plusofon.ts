@@ -73,7 +73,17 @@ export class PlusofonFlashCallProvider implements SmsProvider {
     }
     const text = await res.text().catch(() => "");
     if (!res.ok) {
-      throw new SmsSendError(`Plusofon HTTP ${res.status}: ${text.slice(0, 200)}`);
+      const raw = text.slice(0, 200);
+      // SAF-300 (продолжение): у Plusofon суточный лимит запросов на один номер —
+      // «too many requests for one phone in 24 hours». Это не отказ провайдера,
+      // а лимит: клиенту — 429 с понятным текстом (не общий 503), детали — в логи.
+      if (res.status === 429) {
+        throw new SmsSendError(
+          "Слишком много запросов на этот номер — суточный лимит провайдера исчерпан, попробуйте позже",
+          { status: 429, code: "SMS_RATE_LIMITED", details: `Plusofon HTTP 429: ${raw}` },
+        );
+      }
+      throw new SmsSendError(`Plusofon HTTP ${res.status}: ${raw}`);
     }
     const data = (JSON.parse(text || "{}") ?? {}) as Record<string, unknown>;
     // v1 прячет полезную нагрузку в data.key / data.pin; старый формат — плоский.

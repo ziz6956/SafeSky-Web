@@ -22,6 +22,14 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     // Провайдер недоступен/таймаут (SAF-300) — код не создан, кулдаун не сожжён.
     // 503 Service Unavailable, а не 502: 502 — ошибка шлюза (её отдаёт Render,
     // когда приложение висит); здесь недоступен ВНЕШНИЙ провайдер — это 503.
+    // Суточный лимит провайдера на номер — 429 SMS_RATE_LIMITED (SAF-300 продолжение).
+    // Детали провайдера пишем в логи: раньше SmsSendError терялся без следа,
+    // и причину отказа нельзя было установить по логам Render.
+    console.error(`[sms:${err.code}] ${err.details ?? err.message}`);
+    if (err.status === 429) {
+      res.status(429).json({ error: err.code, message: err.message });
+      return;
+    }
     res.status(503).json({ error: "SMS_SEND_FAILED", message: "Сервис временно недоступен — попробуйте позже" });
     return;
   }

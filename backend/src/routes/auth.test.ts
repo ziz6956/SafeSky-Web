@@ -177,6 +177,22 @@ describe("POST /api/auth/request-code — Flash Call", () => {
     expect(smsCodeCreate).not.toHaveBeenCalled();
   });
 
+  it("суточный лимит провайдера на номер — 429 SMS_RATE_LIMITED, кулдаун не сожжён", async () => {
+    fakeProvider.flashCall = vi.fn().mockRejectedValue(new SmsSendError(
+      "Слишком много запросов на этот номер — суточный лимит провайдера исчерпан, попробуйте позже",
+      { status: 429, code: "SMS_RATE_LIMITED", details: "Plusofon HTTP 429: too many requests for one phone in 24 hours" },
+    ));
+
+    const res = await post("/api/auth/request-code", { phone: PHONE });
+
+    expect(res.status).toBe(429);
+    expect(await res.json()).toMatchObject({
+      error: "SMS_RATE_LIMITED",
+      message: "Слишком много запросов на этот номер — суточный лимит провайдера исчерпан, попробуйте позже",
+    });
+    expect(smsCodeCreate).not.toHaveBeenCalled();
+  });
+
   it("таймаут провайдера — 503 (НЕ 502)", async () => {
     fakeProvider.flashCall = vi.fn().mockRejectedValue(new SmsSendError("Plusofon: таймаут 10 с — провайдер не ответил"));
 

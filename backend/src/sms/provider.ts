@@ -21,9 +21,19 @@ export interface SmsProvider {
 }
 
 export class SmsSendError extends Error {
-  constructor(message: string) {
+  /** HTTP-статус для клиента (по умолчанию 503; 429 — суточный лимит провайдера на номер). */
+  readonly status: number;
+  /** Машинный код ошибки для клиента. */
+  readonly code: string;
+  /** Сырой текст провайдера — только в логи, клиенту не отдаётся. */
+  readonly details?: string;
+
+  constructor(message: string, opts: { status?: number; code?: string; details?: string } = {}) {
     super(message);
     this.name = "SmsSendError";
+    this.status = opts.status ?? 503;
+    this.code = opts.code ?? "SMS_SEND_FAILED";
+    if (opts.details) this.details = opts.details;
   }
 }
 

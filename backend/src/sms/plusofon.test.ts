@@ -85,6 +85,23 @@ describe("PlusofonFlashCallProvider", () => {
     await expect(new PlusofonFlashCallProvider("bad").flashCall("+79991234567", "")).rejects.toThrow(SmsSendError);
   });
 
+  it("HTTP 429 «too many requests for one phone» → SmsSendError SMS_RATE_LIMITED (SAF-300)", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(
+      okResponse({ code: 429, message: "too many requests for one phone in 24 hours", success: false }, 429),
+    ));
+    try {
+      await new PlusofonFlashCallProvider("k").flashCall("+79991234567", "");
+      throw new Error("вызов не должен был пройти");
+    } catch (e) {
+      expect(e).toBeInstanceOf(SmsSendError);
+      const err = e as SmsSendError;
+      expect(err.status).toBe(429);
+      expect(err.code).toBe("SMS_RATE_LIMITED");
+      expect(err.message).toContain("суточный лимит провайдера");
+      expect(err.details).toContain("too many requests");
+    }
+  });
+
   it("сетевая ошибка (fetch reject) превращается в SmsSendError «недоступен»", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("fetch failed")));
     await expect(new PlusofonFlashCallProvider("k").flashCall("+79991234567", ""))
