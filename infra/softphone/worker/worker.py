@@ -136,10 +136,17 @@ class BaresipCtl:
             self.sock = None
         self.buf = b""
 
-    def send(self, cmd: str) -> None:
-        """Команда baresip. Номера в командах маскируются в журнале."""
-        log(f"> {redact(cmd)}")
-        self.sock.sendall((cmd + "\n").encode())
+    def send(self, cmd: str, params: str = "") -> None:
+        """Команда baresip 1.x: netstring `<len>:<json>,` с полями
+        command/params (протокол ctrl_tcp 1.1 — JSON-команды). Номера в
+        командах маскируются в журнале."""
+        payload = {"command": cmd}
+        if params:
+            payload["params"] = params
+        data = json.dumps(payload, ensure_ascii=False).encode()
+        frame = str(len(data)).encode() + b":" + data + b","
+        log(f"> {redact(cmd + (' ' + params if params else ''))}")
+        self.sock.sendall(frame)
 
     def _fill(self) -> None:
         chunk = self.sock.recv(4096)
@@ -167,8 +174,9 @@ class BaresipCtl:
             return data.decode("utf-8", "replace")
 
     def events(self):
-        """Поток сообщений: события baresip — JSON-объекты с полем "event",
-        ответы на команды — текст (кладём как {"_text": ...})."""
+        """Поток сообщений ctrl_tcp 1.1: события baresip — JSON-объекты
+        {"event": true, "type": ..., "id": ...}, ответы на команды —
+        {"response": true, "ok": ..., "data": ...}; прочее — {"_text": ...}."""
         while True:
             text = self.recv_message()
             try:
