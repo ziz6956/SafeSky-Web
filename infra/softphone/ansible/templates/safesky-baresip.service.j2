@@ -1,0 +1,28 @@
+[Unit]
+Description=SafeSky softphone SIP engine (baresip, Plusofon)
+After=network-online.target
+Wants=network-online.target
+# SAF-270: при ошибке конфигурации baresip выходит ненулевым кодом —
+# не рестартуем бесконечно: не чаще StartLimitBurst раз за
+# StartLimitIntervalSec, дальше юнит в failed, причина в
+# `journalctl -u safesky-baresip`. Восстановление:
+#   systemctl reset-failed safesky-baresip && systemctl start safesky-baresip
+StartLimitIntervalSec=1800
+StartLimitBurst=3
+
+[Service]
+Type=simple
+User={{ service_user }}
+Environment=HOME={{ deploy_dir }}/baresip
+# -f — КАТАЛОГ конфига (внутри baresip ищет файл `config` и `accounts`);
+# передача пути к самому файлу даёт «Not a directory» (SAF-276, прогон RuVDS).
+ExecStart=/usr/bin/baresip -f {{ deploy_dir }}/baresip
+Restart=on-failure
+RestartSec=5
+# SIP-сигнализация на 5060/udp — привилегированный порт.
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

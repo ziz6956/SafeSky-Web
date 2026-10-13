@@ -1,4 +1,10 @@
-# Пример inventory. IP берётся из вывода terraform: `terraform output server_ipv4`.
-# Скопировать в hosts.ini (НЕ коммитить).
+# Инвентарь софтфона (SAF-276). Скопировать в hosts.ini и при необходимости
+# поправить IP. Реальный hosts.ini в репозиторий не попадает (.gitignore).
 [softphone]
-safesky-softphone-01 ansible_host=REPLACE_WITH_SERVER_IP ansible_user=root
+# Боевой узел: RuVDS Уфа — Debian 13, 2 ГБ RAM, 20 ГБ HDD (хост РФ, ч. 5
+# ст. 18 152-ФЗ соблюдена). IP узла — в env агента SOFTPHONE_SSH_HOST.
+170.168.15.17 ansible_user=root ansible_python_interpreter=/usr/bin/python3
+
+# Управляющая машина агента — без sshpass; подключение через paramiko:
+#   ansible-playbook -i hosts.ini playbook.yml -c paramiko \
+#     -e "ansible_password=$SOFTPHONE_SSH_PASSWORD"

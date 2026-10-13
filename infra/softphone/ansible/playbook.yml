@@ -1,5 +1,13 @@
 ---
-# SAF-234: настройка сервера софтфона (после `terraform apply`).
+# SAF-276: настройка сервера софтфона на RuVDS (Debian 13, Уфа — хост РФ).
+#
+# Архитектура: baresip держит SIP-регистрацию в Plusofon и выполняет звонки;
+# Python-воркер управляет им по ctrl_tcp (127.0.0.1:4444, netstring) и ходит
+# в очередь Render по HTTP. Воспроизведение WAV — только по событию
+# CALL_ESTABLISHED (200 OK): воркер подменяет аудиоисточник командой
+# `ausrc aufile,…` (фикс A1; запасной фикс A2 — silence.wav в конфиге,
+# включается переменной AUDIO_FALLBACK_SILENCE=true). Подробности и проверка
+# `--once` — infra/softphone/README.md.
 #
 # Секреты передаются через переменные окружения (в файлы не попадают):
 #   export SIP_LOGIN=... SIP_PASSWORD=...                 # учётные данные SIP Plusofon
@@ -8,16 +16,20 @@
 #
 # Очередь Render по умолчанию ВЫКЛЮЧЕНА (queue_enabled=false): опрос очереди
 # на не-РФ хосте запрещён ч. 5 ст. 18 152-ФЗ (SAF-240 §4, G-CALL-2, SAF-246).
-# Включение — осознанное действие, только на РФ-хосте:
+# Включение — осознанное действие, только на РФ-хосте (RuVDS — РФ, SAF-276):
 #   export QUEUE_ENABLED=true QUEUE_BASE_URL=... WORKER_TOKEN=...
 #
-# Без SIP_LOGIN/SIP_PASSWORD/SIP_SERVER плейбук НЕ трогает /etc/safesky-softphone/env
-# (рабочие креды узла не затираются пустыми строками — SAF-251). На свежем узле без
-# env-файла прогон с пустыми секретами падает assert'ом (fail-closed).
+# Без SIP_LOGIN/SIP_PASSWORD/SIP_SERVER плейбук НЕ трогает
+# /etc/safesky-softphone/env и accounts-файл baresip (рабочие креды узла не
+# затираются пустыми строками — SAF-251). На свежем узле без env-файла прогон
+# с пустыми секретами падает assert'ом (fail-closed).
 #
 # Запуск:
 #   ansible-playbook -i hosts.ini playbook.yml
-- name: Развернуть софтфон SafeSky (pjsua2 + Plusofon SIP)
+#   # при отсутствии sshpass на управляющей машине:
+#   ansible-playbook -i hosts.ini playbook.yml -c paramiko \
+#     -e "ansible_password=$SOFTPHONE_SSH_PASSWORD"
+- name: Развернуть софтфон SafeSky (baresip + ctrl_tcp, Plusofon SIP) на RuVDS
   hosts: softphone
   become: true
   vars:
@@ -31,13 +43,22 @@
     worker_token: "{{ lookup('env', 'WORKER_TOKEN') | default('', true) }}"
     plusofon_api_token: "{{ lookup('env', 'PLUSOFON_API_TOKEN') | default('', true) }}"
     # Очередь выключена по умолчанию: на не-РФ хостах её рендер в env запрещён
-    # (SAF-240 §4, G-CALL-2, SAF-246 — опрос очереди Render до переноса на РФ-хост).
-    # QUEUE_ENABLED=true — осознанное включение, только для РФ-хоста.
+    # (SAF-240 §4, G-CALL-2, SAF-246). QUEUE_ENABLED=true — осознанное
+    # включение, только для РФ-хоста.
     queue_enabled: "{{ lookup('env', 'QUEUE_ENABLED') | default(false, true) | bool }}"
+    # Фикс A2 (запасной): silence.wav аудиоисточником в конфиге baresip, если
+    # без источника звонок не держится в фазе 183. По умолчанию выключен
+    # (фикс A1 — источника в конфиге нет вовсе).
+    audio_fallback_silence: "{{ lookup('env', 'AUDIO_FALLBACK_SILENCE') | default(false, true) | bool }}"
+    # Адрес слушателя ctrl_tcp baresip. Гвард ниже допускает ТОЛЬКО loopback
+    # (требование SRE, SAF-277): ctrl_tcp не аутентифицирует клиента — на
+    # внешнем интерфейсе это удалённое управление дозвоном (набор номера,
+    # сброс, подмена аудио).
+    ctrl_tcp_listen: "{{ lookup('env', 'CTRL_TCP_LISTEN') | default('127.0.0.1:4444', true) }}"
 
   tasks:
     # SAF-251: env-файл узла не перезаписывается без полного комплекта SIP-секретов
-    # (см. `when` на задаче env-шаблона ниже). На свежем узле (env отсутствует)
+    # (см. `when` на задачах env/accounts ниже). На свежем узле (env отсутствует)
     # пустые секреты — ошибка конфигурации: падаем assert'ом (fail-closed).
     - name: Проверить наличие env-файла на узле
       stat:
@@ -66,30 +87,81 @@
           Очередь включается только на РФ-хосте и только полным комплектом
           параметров (SAF-240 §4, G-CALL-2, SAF-246).
       when: queue_enabled | bool
+
     - name: Обновить индекс пакетов
       apt:
         update_cache: true
         cache_valid_time: 3600
 
-    # Пакета python3-pjsua2 нет ни в одном дистрибутиве (Debian 12/13, Ubuntu,
-    # PyPI — проверено 09.10.2026), поэтому ставим зависимости сборки и собираем
-    # биндинг из официальных исходников pjproject (см. scripts/build_pjsua2.sh).
-    - name: Установить зависимости сборки pjsua2
+    # baresip — штатный пакет Debian 13 (1.1.0); модуль ctrl_tcp входит в
+    # поставку пакета. Сборок из исходников больше нет (pjsua2/SWIG — fallback
+    # B, см. README; на 2 ГБ RAM не собираем без необходимости).
+    - name: Установить baresip и вспомогательные пакеты
       apt:
         name:
-          - build-essential
+          - baresip
           - python3
-          - python3-dev
-          - swig
-          - libssl-dev
-          - uuid-dev
+          - ufw
           - curl
           - ca-certificates
         state: present
 
-    - name: Собрать и установить pjsua2 (python3-биндинг) из исходников
-      script: scripts/build_pjsua2.sh
+    # ВАЖНО: НЕ `baresip -v` — в baresip 1.x этот флаг не печатает версию,
+    # а запускает UA в интерактивном режиме (команда не завершается, плейбук
+    # зависает навсегда). Версию берём из dpkg (SAF-276, развёртывание).
+    - name: Версия baresip
+      command: dpkg-query -W -f '${Version}' baresip-core
+      register: baresip_version_out
       changed_when: false
+
+    - name: Зафиксировать версию baresip (факт для шаблонов)
+      set_fact:
+        baresip_version: "{{ baresip_version_out.stdout | trim }}"
+
+    - name: Модуль ctrl_tcp должен быть в поставке baresip
+      stat:
+        # Debian 13: модули в /usr/lib/baresip/modules (не multiarch-путь)
+        path: /usr/lib/baresip/modules/ctrl_tcp.so
+      register: ctrl_tcp_mod
+
+    - name: Модули account/uuid/menu должны быть в поставке (SAF-276)
+      stat:
+        path: "{{ item }}"
+      loop:
+        - /usr/lib/baresip/modules/account.so
+        - /usr/lib/baresip/modules/uuid.so
+        - /usr/lib/baresip/modules/menu.so
+      register: tmp_mods
+
+    - name: ctrl_tcp отсутствует — ошибка конфигурации пакета
+      assert:
+        that: ctrl_tcp_mod.stat.exists
+        fail_msg: >-
+          Модуль ctrl_tcp.so не найден в поставке baresip (`dpkg -L baresip`).
+          Без него воркер не сможет управлять софтфоном.
+
+    - name: account.so/uuid.so/menu.so отсутствуют — не загрузится контур (SAF-276)
+      assert:
+        that:
+          - tmp_mods.results | selectattr('stat.exists') | list | length == 3
+        fail_msg: >-
+          Модули account.so/uuid.so/menu.so не найдены в поставке baresip.
+          В baresip 1.x accounts читает временный модуль account.so
+          (module_tmp): без него SIP-аккаунты не загружаются и REGISTER не
+          выполняется; menu.so регистрирует команды dial/hangup/ausrc/reginfo,
+          без него ctrl_tcp на любую команду отвечает ok=false (SAF-276).
+
+    # Гвард SAF-277 (требование SRE): ctrl_tcp не аутентифицирует клиента,
+    # слушать разрешено только loopback. Любое другое значение — fail-closed
+    # до применения конфига.
+    - name: ctrl_tcp — только loopback (fail-closed, SAF-277)
+      assert:
+        that:
+          - "ctrl_tcp_listen.startswith('127.') or ctrl_tcp_listen.startswith('::1') or ctrl_tcp_listen.startswith('[::1]') or ctrl_tcp_listen.startswith('localhost')"
+        fail_msg: >-
+          ctrl_tcp_listen={{ ctrl_tcp_listen }}: разрешён только loopback
+          (127.0.0.1:4444). Открытый ctrl_tcp = удалённое управление дозвоном
+          (набор номера, сброс, подмена аудио) без аутентификации (SAF-277).
 
     - name: Пользователь сервиса
       user:
@@ -105,6 +177,14 @@
         owner: root
         group: root
         mode: "0755"
+
+    - name: Каталог baresip (config + accounts)
+      file:
+        path: "{{ deploy_dir }}/baresip"
+        state: directory
+        owner: "{{ service_user }}"
+        group: root
+        mode: "0750"
 
     - name: Файлы воркера
       copy:
@@ -131,6 +211,27 @@
         group: root
         mode: "0700"
 
+    - name: Accounts-файл baresip (0600, читается только сервисным пользователем)
+      template:
+        src: accounts.j2
+        dest: "{{ deploy_dir }}/baresip/accounts"
+        owner: "{{ service_user }}"
+        group: "{{ service_user }}"
+        mode: "0600"
+      # SAF-251: без полного комплекта SIP-секретов файл не трогаем — иначе
+      # рабочие креды узла затираются пустыми строками.
+      when: sip_login | length > 0 and sip_password | length > 0 and sip_server | length > 0
+      notify: перезапуск baresip
+
+    - name: Конфиг baresip (без секретов)
+      template:
+        src: baresip-config.j2
+        dest: "{{ deploy_dir }}/baresip/config"
+        owner: root
+        group: root
+        mode: "0644"
+      notify: перезапуск baresip
+
     - name: Env-файл с секретами (0600)
       template:
         src: safesky-softphone.env.j2
@@ -147,11 +248,30 @@
       debug:
         msg: >-
           SIP_LOGIN/SIP_PASSWORD/SIP_SERVER не заданы в окружении:
-          /etc/safesky-softphone/env оставлен без изменений (SAF-251).
-          Для обновления SIP-кредов задайте секреты и повторите прогон.
+          /etc/safesky-softphone/env и accounts baresip оставлены без
+          изменений (SAF-251). Для обновления SIP-кредов задайте секреты
+          и повторите прогон.
       when: not (sip_login | length > 0 and sip_password | length > 0 and sip_server | length > 0)
 
-    - name: systemd-юнит
+    - name: silence.wav (фикс A2 — аудиоисточник-заглушка, 10 мин)
+      command: >-
+        python3 -c "import wave; w=wave.open('{{ deploy_dir }}/audio/silence.wav','wb');
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(8000);
+        w.writeframes(b'\\x00\\x00'*8000*600); w.close()"
+      args:
+        creates: "{{ deploy_dir }}/audio/silence.wav"
+      when: audio_fallback_silence | bool
+
+    - name: systemd-юнит baresip
+      template:
+        src: safesky-baresip.service.j2
+        dest: /etc/systemd/system/safesky-baresip.service
+        owner: root
+        group: root
+        mode: "0644"
+      notify: перезапуск baresip
+
+    - name: systemd-юнит воркера
       template:
         src: safesky-softphone.service.j2
         dest: /etc/systemd/system/safesky-softphone.service
@@ -160,12 +280,66 @@
         mode: "0644"
       notify: перезапуск воркера
 
+    # Анти-crash-loop (SAF-270): после прежних неудачных стартов systemd
+    # откажет в запуске («Start request repeated too quickly») даже когда
+    # конфиг уже исправлен. При деплое счётчик сбрасываем — старт легитимен.
+    - name: Сбросить start-limit юнитов перед запуском (SAF-270/276)
+      command: systemctl reset-failed safesky-baresip safesky-softphone
+      changed_when: false
+
+    - name: Включить и запустить baresip
+      systemd:
+        name: safesky-baresip
+        daemon_reload: true
+        enabled: true
+        state: started
+
     - name: Включить и запустить воркер
       systemd:
         name: safesky-softphone
         daemon_reload: true
         enabled: true
         state: started
+
+    # Харденинг (SAF-270, перенесено на RuVDS): ufw — единственный периметр
+    # узла (внешнего файрвола у RuVDS нет). 5060/udp — только от SIP-сети
+    # Plusofon; INVITE-спам сканеров с открытого 0.0.0.0/0 отсекается.
+    - name: ufw — SSH (22/tcp)
+      command: ufw allow 22/tcp
+      changed_when: false
+
+    - name: ufw — SIP-сигнализация только от SIP-сети Plusofon
+      command: "{{ item }}"
+      loop:
+        - ufw allow from 185.54.49.80/30 to any port 5060 proto udp
+        - ufw allow from 151.241.171.225 to any port 5060 proto udp
+      changed_when: false
+
+    - name: ufw — RTP-медиа (TODO сузить до медиа-IP Plusofon после прогона)
+      command: ufw allow 10000:20000/udp
+      changed_when: false
+
+    - name: ufw — политики (incoming deny по умолчанию)
+      command: "{{ item }}"
+      loop:
+        - ufw default deny incoming
+        - ufw default allow outgoing
+      changed_when: false
+
+    - name: "ufw — ctrl_tcp только loopback: явный deny 4444/tcp снаружи (SAF-277)"
+      command: ufw deny 4444/tcp
+      changed_when: false
+
+    - name: ufw — включить
+      command: ufw --force enable
+      changed_when: false
+
+    # Часовой пояс хоста — UTC (SAF-277, требование SRE): Уфа = UTC+5, а
+    # quiet hours (SAF-23) и окна алертов команда ведёт в UTC/MSK. Локальную
+    # TZ в юнитах и воркере не использовать.
+    - name: Часовой пояс хоста — UTC (SAF-277)
+      command: timedatectl set-timezone UTC
+      changed_when: false
 
     # Опционально: создать SIP-аккаунт Plusofon через API (если задан токен).
     - name: Bootstrap SIP-аккаунта Plusofon (опционально)
@@ -183,6 +357,11 @@
       when: plusofon_api_token | length > 0
 
   handlers:
+    - name: перезапуск baresip
+      systemd:
+        name: safesky-baresip
+        state: restarted
+
     - name: перезапуск воркера
       systemd:
         name: safesky-softphone

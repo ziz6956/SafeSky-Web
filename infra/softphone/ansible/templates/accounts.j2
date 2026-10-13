@@ -1,0 +1,10 @@
+# SIP-аккаунт Plusofon — управляется Ansible (SAF-276), 0600, читается только
+# пользователем safesky (процесс baresip). Формат baresip:
+#   <sip:uri>;auth_user=<логин>;auth_pass=<пароль>;outbound="sip:<сервер>"
+# auth_user и outbound — как в рабочей конфигурации, проверенной на Plusofon
+# (SAF-235): outbound направляет REGISTER на sip-сервер аккаунта.
+{% if '@' in sip_login %}
+<sip:{{ sip_login }}>;auth_user={{ sip_login.split('@')[0] }};auth_pass={{ sip_password }};outbound="sip:{{ sip_server }}";regint=120
+{% else %}
+<sip:{{ sip_login }}@{{ sip_server }}>;auth_user={{ sip_login }};auth_pass={{ sip_password }};outbound="sip:{{ sip_server }}";regint=120
+{% endif %}
