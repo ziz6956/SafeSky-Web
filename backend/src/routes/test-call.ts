@@ -5,7 +5,6 @@ import { config } from "../config";
 import { db } from "../db";
 import { CONSENT_ACTION } from "../lib/consent";
 import { ApiError } from "../lib/errors";
-import { normalizePhone } from "../lib/phone";
 import { asyncHandler } from "../middleware/error";
 import { requireAuth } from "../middleware/auth";
 
@@ -74,17 +73,16 @@ router.post(
     if (user.callsEnabled !== true || lastConsent?.action !== CONSENT_ACTION.GRANT) {
       throw new ApiError(409, "CALLS_DISABLED", "Вызовы отключены — включите звонки в личном кабинете");
     }
-    // SAF-247 (G-CALL-2, fail-closed): пока очередь и БД живут вне РФ
-    // (Render Postgres, Франкфурт), номер абонента не должен попадать в
-    // CallJob без явного допуска. Проверка ДО db.callJob.create — при отказе
-    // номер в БД не пишется вовсе. Порядок в цепочке гейтов: согласие
-    // (callsEnabled, SAF-244) → белый список (этот гейт) → запись в очередь.
-    if (config.testCallAllowlist.length === 0) {
-      throw new ApiError(503, "TEST_CALL_DISABLED", "Тестовый прозвон выключен — белый список номеров не настроен");
-    }
-    const normalizedPhone = normalizePhone(user.phone);
-    if (!normalizedPhone || !config.testCallAllowlist.includes(normalizedPhone)) {
-      throw new ApiError(403, "TEST_CALL_NOT_ALLOWED", "Номер не допущен к тестовому прозвону");
+    // SAF-285 (G-CALL-2, директива основателя 13.10): номер для звонка —
+    // профиль текущей сессии (user.phone, «ПРИОРИТЕТНЫЙ НОМЕР» в ЛК), а не
+    // статический TEST_CALL_ALLOWLIST. В CallJob (Render, Франкфурт) попадает
+    // только собственный номер авторизованного пользователя — он уже в БД с
+    // согласием (SAF-177); периметр уже, чем у CSV. Fail-closed: без номера в
+    // профиле задание не ставим (проверка ДО db.callJob.create — при отказе
+    // номер в БД не пишется вовсе). Порядок в цепочке гейтов: согласие
+    // (callsEnabled, SAF-244) → номер профиля (этот гейт) → запись в очередь.
+    if (!user.phone) {
+      throw new ApiError(409, "PHONE_MISSING", "В профиле не указан номер — добавьте номер в личном кабинете");
     }
     const job = await db.callJob.create({ data: { userId, phone: user.phone } });
     res.status(202).json({ ok: true, status: "queued", jobId: job.id });
