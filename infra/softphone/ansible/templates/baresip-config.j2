@@ -16,10 +16,17 @@ module_g711		g711.so
 {% else %}
 module_path		/usr/lib/baresip/modules
 module			aufile.so
-module			auconv.so
-module			auresamp.so
 module			g711.so
-module			ctrl_tcp.so
+
+# baresip 1.x: uuid и account — временные модули (module_tmp): загружаются на
+# старте, делают работу (uuid для стабильной идентификации UA; account читает
+# <config>/accounts) и выгружаются. Без account.so аккаунты НЕ загружаются —
+# «Populated 1 account» в журнале не появится (SAF-276, прогон RuVDS).
+module_tmp		uuid.so
+module_tmp		account.so
+
+# ctrl_tcp — прикладной модуль (module_app), как в дефолтном шаблоне baresip.
+module_app		ctrl_tcp.so
 {% endif %}
 
 # SIP-сигнализация Plusofon (UDP 5060; ufw открывает входящие только от SIP-сети

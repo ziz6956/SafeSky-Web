@@ -124,12 +124,29 @@
         path: /usr/lib/baresip/modules/ctrl_tcp.so
       register: ctrl_tcp_mod
 
+    - name: Модули account и uuid должны быть в поставке (module_tmp, SAF-276)
+      stat:
+        path: "{{ item }}"
+      loop:
+        - /usr/lib/baresip/modules/account.so
+        - /usr/lib/baresip/modules/uuid.so
+      register: tmp_mods
+
     - name: ctrl_tcp отсутствует — ошибка конфигурации пакета
       assert:
         that: ctrl_tcp_mod.stat.exists
         fail_msg: >-
           Модуль ctrl_tcp.so не найден в поставке baresip (`dpkg -L baresip`).
           Без него воркер не сможет управлять софтфоном.
+
+    - name: account.so/uuid.so отсутствуют — аккаунты не загрузятся (SAF-276)
+      assert:
+        that:
+          - tmp_mods.results | selectattr('stat.exists') | list | length == 2
+        fail_msg: >-
+          Модули account.so/uuid.so не найдены в поставке baresip. В baresip 1.x
+          accounts читает временный модуль account.so (module_tmp): без него
+          SIP-аккаунты не загружаются и REGISTER не выполняется (SAF-276).
 
     # Гвард SAF-277 (требование SRE): ctrl_tcp не аутентифицирует клиента,
     # слушать разрешено только loopback. Любое другое значение — fail-closed
@@ -259,6 +276,13 @@
         group: root
         mode: "0644"
       notify: перезапуск воркера
+
+    # Анти-crash-loop (SAF-270): после прежних неудачных стартов systemd
+    # откажет в запуске («Start request repeated too quickly») даже когда
+    # конфиг уже исправлен. При деплое счётчик сбрасываем — старт легитимен.
+    - name: Сбросить start-limit юнитов перед запуском (SAF-270/276)
+      command: systemctl reset-failed safesky-baresip safesky-softphone
+      changed_when: false
 
     - name: Включить и запустить baresip
       systemd:
