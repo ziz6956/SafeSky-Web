@@ -62,7 +62,7 @@ Dev-режим SMS: `SMS_PROVIDER=console` (по умолчанию) — код 
 
 Заголовок: `Authorization: Bearer <token>`.
 
-- `GET /api/me` → `200 { "user": { phone, airport, callsEnabled } }`.
+- `GET /api/me` → `200 { "user": { phone, airport, callsEnabled, consentGranted } }` — `consentGranted` (SAF-296): действующая запись согласия на автоматические вызовы в журнале `call_consents`; тумблер в ЛК показывает `callsEnabled` И `consentGranted`.
 - `PATCH /api/settings` с телом `{ "airport": "DME" }` и/или `{ "callsEnabled": false }` → `200 { "user": … }`.
 - Аэропорты (whitelist): `DME SVO VKO LED AER KZN KUF GOJ`; иначе `400 INVALID_AIRPORT`.
 - Без/с неверным токеном: `401 { "error": "UNAUTHORIZED" }`.
