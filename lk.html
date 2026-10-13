@@ -780,7 +780,11 @@
 
     var showQueued = function () {
       setTestCallContent('check_circle', 'ЗВОНОК В ОЧЕРЕДИ', false);
-      if (testCallFeedback) { testCallFeedback.classList.remove('hidden'); }
+      if (testCallFeedback) {
+        testCallFeedback.textContent = 'Вызов поставлен в очередь. Ожидайте входящий через 3–5 секунд.';
+        testCallFeedback.classList.remove('text-status-alert');
+        testCallFeedback.classList.remove('hidden');
+      }
       if (state.testCallTimer) { clearTimeout(state.testCallTimer); }
       state.testCallTimer = setTimeout(resetTestCall, 5000);
     };
@@ -790,6 +794,14 @@
       if (err && err.code === 'TEST_CALL_TOO_OFTEN') { text = err.message || text; }
       else if (err && err.status === 401) { text = 'Сессия истекла. Подтвердите номер заново.'; }
       else if (err && err.code) { text = err.message || text; }
+      // SAF-234: ошибка дублируется рядом с кнопкой — верхний баннер при
+      // уже показанном «Сессия истекла» выглядит как «ошибки нет», а при
+      // прокрутке вниз баннер вообще вне экрана.
+      if (testCallFeedback) {
+        testCallFeedback.textContent = text;
+        testCallFeedback.classList.add('text-status-alert');
+        testCallFeedback.classList.remove('hidden');
+      }
       setBanner(text, true);
     };
 
