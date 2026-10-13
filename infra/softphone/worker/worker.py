@@ -96,6 +96,15 @@ def redact(text: str) -> str:
     return _PHONE_RE.sub(lambda m: mask_phone(m.group(0)), text)
 
 
+_ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def strip_ansi(text: str) -> str:
+    """Убрать ANSI-коды цвета: вывод команд baresip (reginfo и др.)
+    раскрашивает статус — «\x1b[32mOK \x1b[;m» (SAF-276, узел RuVDS)."""
+    return _ANSI_RE.sub("", text)
+
+
 def normalize_phone(phone: str) -> str:
     """79991234567 — международный формат без '+'."""
     digits = "".join(ch for ch in phone if ch.isdigit())
@@ -351,10 +360,11 @@ class Worker:
                 continue
             if isinstance(msg, dict) and "response" in msg:
                 ok = bool(msg.get("ok"))
-                data = str(msg.get("data") or "")
+                data = strip_ansi(str(msg.get("data") or ""))
                 # baresip 1.1 reginfo: «--- User Agents (1) ---» +
-                # «0 - sip:<aor> OK   Expires 300s» (OK = статус регистрации).
-                # Запасной формат (ua_print_status): «200 OK ... [1 binding]».
+                # «0 - sip:<aor> OK   Expires 300s» (OK = статус регистрации,
+                # раскрашен ANSI-кодами — strip_ansi). Запасной формат
+                # (ua_print_status): «200 OK ... [1 binding]».
                 active = ("--- user agents" in data.lower()
                           and re.search(r"sip:\S+\s+OK\b", data)) \
                     or ("200 ok" in data.lower() and "binding" in data.lower())
@@ -385,7 +395,7 @@ class Worker:
                 self.handle_event(msg)
             elif isinstance(msg, dict) and "response" in msg:
                 # Ответ на команду вне check_registered — журналируем.
-                log(f"baresip ответ: ok={msg.get('ok')} {redact(str(msg.get('data', '')))[:160]}")
+                log(f"baresip ответ: ok={msg.get('ok')} {redact(strip_ansi(str(msg.get('data', ''))))[:160]}")
             else:
                 log(f"baresip: {redact(str(msg))[:160]}")
 
@@ -447,7 +457,12 @@ class Worker:
         self.check_registered()
         log(f"цикл опроса очереди запущен (интервал {POLL_INTERVAL} c)")
         while True:
-            self.tick()
+            try:
+                self.tick()
+            except Exception as e:  # noqa: BLE001 — воркер обязан жить
+                # SAF-276 (узел RuVDS): транзиентный URLError до Render
+                # валил воркер насмерть; очередь опросится в следующем тике.
+                log(f"ошибка цикла: {redact(str(e))}")
             time.sleep(0.5 if self.active else POLL_INTERVAL)
 
     def run_once(self, phone: str) -> int:
@@ -469,8 +484,11 @@ class Worker:
         self.ctl.send("dial", f"sip:{digits}@{SIP_SERVER}")
         log(f"вызываю {mask_phone(digits)} через {SIP_SERVER}")
         while s.result is None:
-            self.drain_events()
-            self.tick()
+            try:
+                self.drain_events()
+                self.tick()
+            except Exception as e:  # noqa: BLE001 — одиночный звонок, не падать
+                log(f"ошибка цикла: {redact(str(e))}")
             time.sleep(0.5)
         log(f"результат: {s.result}")
         return 0 if s.result == "delivered" else 1
