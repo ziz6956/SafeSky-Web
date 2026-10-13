@@ -14,7 +14,9 @@ StartLimitBurst=3
 Type=simple
 User={{ service_user }}
 Environment=HOME={{ deploy_dir }}/baresip
-ExecStart=/usr/bin/baresip -f {{ deploy_dir }}/baresip/config
+# -f — КАТАЛОГ конфига (внутри baresip ищет файл `config` и `accounts`);
+# передача пути к самому файлу даёт «Not a directory» (SAF-276, прогон RuVDS).
+ExecStart=/usr/bin/baresip -f {{ deploy_dir }}/baresip
 Restart=on-failure
 RestartSec=5
 # SIP-сигнализация на 5060/udp — привилегированный порт.
