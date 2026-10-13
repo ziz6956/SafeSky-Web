@@ -120,7 +120,8 @@
 
     - name: Модуль ctrl_tcp должен быть в поставке baresip
       stat:
-        path: /usr/lib/x86_64-linux-gnu/baresip/modules/ctrl_tcp.so
+        # Debian 13: модули в /usr/lib/baresip/modules (не multiarch-путь)
+        path: /usr/lib/baresip/modules/ctrl_tcp.so
       register: ctrl_tcp_mod
 
     - name: ctrl_tcp отсутствует — ошибка конфигурации пакета
