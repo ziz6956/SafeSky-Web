@@ -106,14 +106,17 @@
           - ca-certificates
         state: present
 
+    # ВАЖНО: НЕ `baresip -v` — в baresip 1.x этот флаг не печатает версию,
+    # а запускает UA в интерактивном режиме (команда не завершается, плейбук
+    # зависает навсегда). Версию берём из dpkg (SAF-276, развёртывание).
     - name: Версия baresip
-      command: baresip -v
+      command: dpkg-query -W -f '${Version}' baresip-core
       register: baresip_version_out
       changed_when: false
 
     - name: Зафиксировать версию baresip (факт для шаблонов)
       set_fact:
-        baresip_version: "{{ baresip_version_out.stdout_lines[0] | regex_replace('^baresip v', '') | regex_replace(' .*$', '') | trim }}"
+        baresip_version: "{{ baresip_version_out.stdout | trim }}"
 
     - name: Модуль ctrl_tcp должен быть в поставке baresip
       stat:
