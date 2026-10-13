@@ -74,19 +74,27 @@ router.post(
     if (user.callsEnabled !== true || lastConsent?.action !== CONSENT_ACTION.GRANT) {
       throw new ApiError(409, "CALLS_DISABLED", "Вызовы отключены — включите звонки в личном кабинете");
     }
-    // SAF-247 (G-CALL-2, fail-closed): пока очередь и БД живут вне РФ
-    // (Render Postgres, Франкфурт), номер абонента не должен попадать в
-    // CallJob без явного допуска. Проверка ДО db.callJob.create — при отказе
-    // номер в БД не пишется вовсе. Порядок в цепочке гейтов: согласие
-    // (callsEnabled, SAF-244) → белый список (этот гейт) → запись в очередь.
-    if (config.testCallAllowlist.length === 0) {
-      throw new ApiError(503, "TEST_CALL_DISABLED", "Тестовый прозвон выключен — белый список номеров не настроен");
+    // SAF-285 (директива основателя 13.10): номер для звонка — профиль текущей
+    // сессии (user.phone, «ПРИОРИТЕТНЫЙ НОМЕР» в ЛК), а не статический
+    // allowlist TEST_CALL_ALLOWLIST (SAF-247, доступ кнопки). Структурное
+    // правило «только собственный номер» устраняет failure mode «мисконфиг
+    // CSV допускает третье лицо», но НЕ закрывает G-CALL-2 (локализация,
+    // ч. 5 ст. 18 152-ФЗ) — он остаётся открытым до SAF-246 (перенос очереди
+    // и БД на РФ-хост). Fail-closed: без номера в профиле задание не ставим
+    // (проверка ДО db.callJob.create — при отказе номер в БД не пишется
+    // вовсе). Порядок в цепочке гейтов: согласие (callsEnabled, SAF-244) →
+    // номер профиля (этот гейт) → запись в очередь.
+    if (!user.phone) {
+      throw new ApiError(409, "PHONE_MISSING", "В профиле не указан номер — добавьте номер в личном кабинете");
     }
-    const normalizedPhone = normalizePhone(user.phone);
-    if (!normalizedPhone || !config.testCallAllowlist.includes(normalizedPhone)) {
-      throw new ApiError(403, "TEST_CALL_NOT_ALLOWED", "Номер не допущен к тестовому прозвону");
+    // SAF-287 (defense-in-depth): инвариант E.164 на точке записи. В проде
+    // user.phone нормализован уже при issueCode (номер read-only в settings),
+    // поэтому normalizePhone здесь идемпотентен; отказ — fail-closed до записи.
+    const phone = normalizePhone(user.phone);
+    if (!phone) {
+      throw new ApiError(409, "PHONE_INVALID", "Номер в профиле некорректен — обновите номер в личном кабинете");
     }
-    const job = await db.callJob.create({ data: { userId, phone: user.phone } });
+    const job = await db.callJob.create({ data: { userId, phone } });
     res.status(202).json({ ok: true, status: "queued", jobId: job.id });
   }),
 );
