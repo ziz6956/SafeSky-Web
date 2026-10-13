@@ -26,3 +26,8 @@ export class SmsSendError extends Error {
     this.name = "SmsSendError";
   }
 }
+
+// Таймаут вызова внешнего API телефонии (SAF-300): 10 с — намного меньше
+// таймаута шлюза Render (~100 с), поэтому при зависшем провайдере клиент
+// получает 503 от приложения, а не 502 от шлюза. Провайдер отвечает за секунды.
+export const PROVIDER_TIMEOUT_MS = 10_000;

@@ -9,6 +9,12 @@ const server = app.listen(config.port, () => {
   );
 });
 
+// SAF-300: узел сам закрывает зависшие запросы (408) раньше таймаута шлюза
+// Render (~100 с) — клиент не получает 502 Bad Gateway от шлюза. Каждый внешний
+// вызов дополнительно ограничен PROVIDER_TIMEOUT_MS, это страховка второго уровня.
+server.requestTimeout = 45_000;
+server.headersTimeout = 60_000;
+
 // Аккуратная остановка (Render шлёт SIGTERM при редеплое).
 function shutdown(signal: string) {
   console.log(`[server] ${signal}: останавливаюсь`);

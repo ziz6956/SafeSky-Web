@@ -64,7 +64,8 @@ export async function issueCode(db: PrismaClient, sms: SmsProvider, secret: stri
 
   if (sms.name === "plusofon") {
     if (!sms.flashCall) {
-      throw new ApiError(502, "SMS_SEND_FAILED", "Провайдер не поддерживает Flash Call");
+      // SAF-300: сбои провайдера — 503, а не 502 (502 резервируем за ошибками шлюза).
+      throw new ApiError(503, "SMS_SEND_FAILED", "Провайдер не поддерживает Flash Call");
     }
     // Запуск звонка ДО записи в БД: неуспешный запуск не должен «сжигать» кулдаун.
     const { callId, code } = await sms.flashCall(phone, callbackUrl);
