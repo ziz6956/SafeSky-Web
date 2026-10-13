@@ -124,12 +124,13 @@
         path: /usr/lib/baresip/modules/ctrl_tcp.so
       register: ctrl_tcp_mod
 
-    - name: Модули account и uuid должны быть в поставке (module_tmp, SAF-276)
+    - name: Модули account/uuid/menu должны быть в поставке (SAF-276)
       stat:
         path: "{{ item }}"
       loop:
         - /usr/lib/baresip/modules/account.so
         - /usr/lib/baresip/modules/uuid.so
+        - /usr/lib/baresip/modules/menu.so
       register: tmp_mods
 
     - name: ctrl_tcp отсутствует — ошибка конфигурации пакета
@@ -139,14 +140,16 @@
           Модуль ctrl_tcp.so не найден в поставке baresip (`dpkg -L baresip`).
           Без него воркер не сможет управлять софтфоном.
 
-    - name: account.so/uuid.so отсутствуют — аккаунты не загрузятся (SAF-276)
+    - name: account.so/uuid.so/menu.so отсутствуют — не загрузится контур (SAF-276)
       assert:
         that:
-          - tmp_mods.results | selectattr('stat.exists') | list | length == 2
+          - tmp_mods.results | selectattr('stat.exists') | list | length == 3
         fail_msg: >-
-          Модули account.so/uuid.so не найдены в поставке baresip. В baresip 1.x
-          accounts читает временный модуль account.so (module_tmp): без него
-          SIP-аккаунты не загружаются и REGISTER не выполняется (SAF-276).
+          Модули account.so/uuid.so/menu.so не найдены в поставке baresip.
+          В baresip 1.x accounts читает временный модуль account.so
+          (module_tmp): без него SIP-аккаунты не загружаются и REGISTER не
+          выполняется; menu.so регистрирует команды dial/hangup/ausrc/reginfo,
+          без него ctrl_tcp на любую команду отвечает ok=false (SAF-276).
 
     # Гвард SAF-277 (требование SRE): ctrl_tcp не аутентифицирует клиента,
     # слушать разрешено только loopback. Любое другое значение — fail-closed
