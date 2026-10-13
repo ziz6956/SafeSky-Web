@@ -12,6 +12,7 @@
     python3 infra/softphone/worker/test_worker_redact.py
 """
 
+import json
 import os
 import sys
 import types
@@ -111,6 +112,59 @@ class MaskPhoneTest(unittest.TestCase):
     def test_empty_and_none(self):
         self.assertEqual(worker.mask_phone(""), "***")
         self.assertEqual(worker.mask_phone(None), "***")
+
+
+class _StubSock:
+    """Заглушка сокета ctrl_tcp: только запись команд (нет соединения)."""
+
+    def __init__(self):
+        self.sent = []
+
+    def sendall(self, data):
+        self.sent.append(data)
+
+    def close(self):
+        pass
+
+
+class AusrcResetTest(unittest.TestCase):
+    """SAF-300 (регресс): `ausrc` персистентен — воркер обязан вернуть
+    источник-заглушку перед набором и после завершения звонка. Иначе после
+    первого установленного звонка источником остаётся короткий тестовый WAV,
+    который кончается в early media (183) — baresip рвёт следующий звонок
+    до ответа абонента (симптом: звонок приходит и сразу обрывается)."""
+
+    def _worker_with_stub_sock(self):
+        w = worker.Worker()
+        w.ctl.sock = _StubSock()
+        return w
+
+    def _frames(self, w):
+        # netstring `<len>:<json>,` → список объектов команды.
+        out = []
+        for frame in w.ctl.sock.sent:
+            payload = frame[:-1].split(b":", 1)[1]
+            out.append(json.loads(payload.decode("utf-8")))
+        return out
+
+    def test_start_call_resets_audio_source_before_dial(self):
+        w = self._worker_with_stub_sock()
+        w.start_call({"id": "job-1", "phone": "79991234567"})
+        frames = self._frames(w)
+        self.assertEqual([f.get("command") for f in frames], ["ausrc", "dial"])
+        self.assertEqual(frames[0]["params"], f"aufile,{worker.SILENCE_FILE}")
+        self.assertIn("sip:79991234567@", frames[1]["params"])
+
+    def test_finalize_resets_audio_source_after_call(self):
+        # Запись результата в очередь не выполнится (QUEUE_BASE_URL пуст) —
+        # исключение глотается в finalize, сброс источника должен дойти.
+        w = self._worker_with_stub_sock()
+        s = worker.CallSession("job-2", "79991234567")
+        s.result = "failed"
+        w.finalize(s)
+        frames = self._frames(w)
+        self.assertEqual([f.get("command") for f in frames], ["ausrc"])
+        self.assertEqual(frames[0]["params"], f"aufile,{worker.SILENCE_FILE}")
 
 
 if __name__ == "__main__":
