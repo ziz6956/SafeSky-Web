@@ -12,8 +12,9 @@
 //   код = последние 4 цифры номера звонящего; pending=true — код станет
 //   известен после доставки звонка.
 //   Ошибки: 400 INVALID_PHONE · 429 RESEND_TOO_SOON (err.retryAfterSec) ·
-//           429 TOO_MANY_REQUESTS · 503 SMS_SEND_FAILED (провайдер недоступен,
-//           SAF-300) · err.code=NETWORK, err.status=0 — сеть/сервер недоступен
+//           429 TOO_MANY_REQUESTS · 429 SMS_RATE_LIMITED (суточный лимит
+//           провайдера на номер, SAF-300) · 503 SMS_SEND_FAILED (провайдер
+//           недоступен, SAF-300) · err.code=NETWORK, err.status=0 — сеть/сервер недоступен
 //
 // SafeSkyApi.verifyCode(phone, code, opts?) → { ok: true, token, user: { phone, airport, callsEnabled } }
 //   opts.callsConsent (boolean) — согласие на автоматические вызовы (SAF-244):
