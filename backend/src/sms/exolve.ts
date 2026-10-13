@@ -4,7 +4,7 @@
 // { error: { message, details } }. Legacy { success: true, messageId } из оценки
 // тоже принимаем — документация Exolve по формату ответа противоречива.
 import { maskPhoneForLog, toExolveDigits } from "../lib/phone";
-import { SmsMessage, SmsProvider, SmsSendError } from "./provider";
+import { PROVIDER_TIMEOUT_MS, SmsMessage, SmsProvider, SmsSendError } from "./provider";
 
 const EXOLVE_SEND_SMS_URL = "https://api.exolve.ru/messaging/v1/SendSMS";
 
@@ -23,11 +23,18 @@ function sanitizeError(text: string): string {
 export class ExolveSmsProvider implements SmsProvider {
   readonly name = "exolve" as const;
 
-  constructor(private readonly apiKey: string, private readonly sender: string) {}
+  constructor(
+    private readonly apiKey: string,
+    private readonly sender: string,
+    // SAF-300: таймаут вызова SendSMS — зависший провайдер не подвешивает
+    // хендлер до таймаута шлюза Render (502). Тесты передают меньшее значение.
+    private readonly timeoutMs: number = PROVIDER_TIMEOUT_MS,
+  ) {}
 
   async send({ to, text }: SmsMessage): Promise<void> {
     let res: Response;
     try {
+      // SAF-300: AbortSignal.timeout обрывает и подключение, и чтение тела.
       res = await fetch(EXOLVE_SEND_SMS_URL, {
         method: "POST",
         headers: {
@@ -35,8 +42,12 @@ export class ExolveSmsProvider implements SmsProvider {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ number: this.sender, destination: toExolveDigits(to), text }),
+        signal: AbortSignal.timeout(this.timeoutMs),
       });
     } catch (e) {
+      if (e instanceof Error && (e.name === "AbortError" || e.name === "TimeoutError")) {
+        throw new SmsSendError(`Exolve: таймаут ${Math.round(this.timeoutMs / 1000)} с — провайдер не ответил`);
+      }
       throw new SmsSendError(`Exolve недоступен: ${e instanceof Error ? e.message : String(e)}`);
     }
     if (!res.ok) {

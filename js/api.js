@@ -12,7 +12,8 @@
 //   код = последние 4 цифры номера звонящего; pending=true — код станет
 //   известен после доставки звонка.
 //   Ошибки: 400 INVALID_PHONE · 429 RESEND_TOO_SOON (err.retryAfterSec) ·
-//           429 TOO_MANY_REQUESTS · 502 SMS_SEND_FAILED
+//           429 TOO_MANY_REQUESTS · 503 SMS_SEND_FAILED (провайдер недоступен,
+//           SAF-300) · err.code=NETWORK, err.status=0 — сеть/сервер недоступен
 //
 // SafeSkyApi.verifyCode(phone, code, opts?) → { ok: true, token, user: { phone, airport, callsEnabled } }
 //   opts.callsConsent (boolean) — согласие на автоматические вызовы (SAF-244):
@@ -55,7 +56,11 @@
   }
 
   function apiError(res, data) {
-    var err = new Error((data && data.message) || ("HTTP " + res.status));
+    // SAF-300: 5xx — сервер/провайдер недоступен; шлюз может вернуть и не-JSON
+    // страницу (Render 502) — тогда code=UNKNOWN, но сообщение всё равно человеческое.
+    var msg = (data && data.message) ||
+      (res.status >= 500 ? "Сервис временно недоступен, попробуйте позже." : "HTTP " + res.status);
+    var err = new Error(msg);
     err.status = res.status;
     err.code = (data && data.error) || "UNKNOWN";
     if (data) {
@@ -81,6 +86,14 @@
         if (!res.ok) throw apiError(res, data);
         return data;
       });
+    }).catch(function (e) {
+      // SAF-300: fetch упал на сетевом уровне (сервер не отвечает/DNS/CORS) —
+      // превращаем в обычную ошибку с code=NETWORK, чтобы страницы не падали.
+      if (e && e.status !== undefined) throw e; // это наша apiError — не трогаем
+      var err = new Error("Сервис временно недоступен — проверьте соединение и попробуйте позже.");
+      err.code = "NETWORK";
+      err.status = 0;
+      throw err;
     });
   }
 

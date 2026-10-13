@@ -247,6 +247,9 @@
         setAlert('Новый код можно запросить через ' + wait + ' секунд.', 'info');
       } else if (e.code === 'INVALID_PHONE') {
         setAlert('Проверьте номер: нужен российский номер в формате +7 (XXX) XXX-XX-XX.', 'error');
+      } else if (e.status >= 500 || e.code === 'SMS_SEND_FAILED' || e.code === 'NETWORK') {
+        /* SAF-300: сервер/провайдер телефонии недоступен — не вина пользователя */
+        setAlert('Сервис временно недоступен, попробуйте позже.', 'error');
       } else {
         setAlert('Не удалось запустить звонок. Попробуйте ещё раз через минуту.', 'error');
       }
@@ -287,6 +290,11 @@
       }
       if (e.code === 'INVALID_CODE_FORMAT' || e.code === 'INVALID_PHONE') {
         setAlert('Введите код из 4 цифр — его продиктует робот при звонке.', 'error');
+        return;
+      }
+      if (e.status >= 500 || e.code === 'SMS_SEND_FAILED' || e.code === 'NETWORK') {
+        /* SAF-300: сервер недоступен — ввод кода не сжигаем, можно повторить */
+        setAlert('Сервис временно недоступен, попробуйте позже.', 'error');
         return;
       }
       setAlert('Не удалось проверить код. Попробуйте ещё раз.', 'error');
@@ -390,7 +398,7 @@
       expired: () => { st.busy = true; refresh(); st.busy = false; failExpired(); },
       blocked: () => { st.busy = true; refresh(); st.busy = false; failBlocked(); },
       resend: () => { st.cooldown = 1; startCooldown(1); },
-      network: () => { setAlert('Не удалось запустить звонок. Попробуйте ещё раз через минуту.', 'error'); },
+      network: () => { setAlert('Сервис временно недоступен, попробуйте позже.', 'error'); },
       success: () => succeed(),
     };
     if (preset[name]) { preset[name](); }

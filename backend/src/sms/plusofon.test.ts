@@ -84,4 +84,42 @@ describe("PlusofonFlashCallProvider", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse({ error: "Bad API key" }, 403)));
     await expect(new PlusofonFlashCallProvider("bad").flashCall("+79991234567", "")).rejects.toThrow(SmsSendError);
   });
+
+  it("сетевая ошибка (fetch reject) превращается в SmsSendError «недоступен»", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("fetch failed")));
+    await expect(new PlusofonFlashCallProvider("k").flashCall("+79991234567", ""))
+      .rejects.toThrow("Plusofon недоступен");
+  });
+
+  it("зависший провайдер обрывается таймаутом → SmsSendError «таймаут» (SAF-300)", async () => {
+    // Мок ведёт себя как настоящий fetch: обещание никогда не резолвится,
+    // reject приходит только по сигналу abort (так делает undici).
+    const hangingFetch = (_url: string, init?: RequestInit) =>
+      new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener("abort", () => {
+          reject(Object.assign(new Error("The operation was aborted"), { name: "AbortError" }));
+        });
+      });
+    vi.stubGlobal("fetch", hangingFetch);
+
+    const p = new PlusofonFlashCallProvider("k", 50); // таймаут 50 мс — тест быстрый
+    const started = Date.now();
+    await expect(p.flashCall("+79991234567", "")).rejects.toThrow(/таймаут/);
+    expect(Date.now() - started).toBeLessThan(1_000); // оборвалось таймаутом, а не зависло
+  });
+
+  it("оборванное тело ответа не роняет вызов — code=null, код придёт колбэком", async () => {
+    // Заголовки пришли, тело прочитать не удалось (обрыв на середине ответа).
+    // Звонок при этом мог быть запущен: не считаем это ошибкой, запись ждёт
+    // колбэка (codeHash=null → resolveFlashCall сопоставит по номеру).
+    const brokenBody = {
+      ok: true,
+      status: 200,
+      text: () => Promise.reject(new TypeError("terminated")),
+    } as unknown as Response;
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(brokenBody));
+
+    const result = await new PlusofonFlashCallProvider("k", 50).flashCall("+79991234567", "");
+    expect(result).toEqual({ callId: "", code: null });
+  });
 });

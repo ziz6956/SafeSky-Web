@@ -33,13 +33,25 @@ services:
         sync: false
       - key: WORKER_TOKEN
         sync: false            # Bearer-токен SIP-воркера (SAF-234/235): /api/test-call/queue/*
+      # Plusofon Flash Call (SAF-223): токен /send и секрет колбэка задаются
+      # на Render (dashboard/API). sync:false — синк блюпринта их НЕ трогает.
+      # SAF-300: без этих строк синк блюпринта удалил бы переменные с сервиса
+      # (или вернул бы SMS_PROVIDER=console) — Flash Call упал бы с 502/503.
+      - key: PLUSOFON_FLASH_CALL_TOKEN
+        sync: false
+      - key: PLUSOFON_WEBHOOK_SECRET
+        sync: false
+      - key: FLASH_CALLBACK_BASE_URL
+        sync: false
       # SAF-285: TEST_CALL_ALLOWLIST убран — номер тестового прозвона берётся
       # из профиля авторизованного пользователя (user.phone), не из CSV.
       # --- Конфиг (не секреты), фиксирован постановкой SAF-206/SAF-219 ---
       - key: CORS_ORIGINS
         value: https://ziz6956.github.io
+      # SAF-223/SAF-300: боевой канал подтверждения — Flash Call (plusofon);
+      # console остаётся только для локальной разработки.
       - key: SMS_PROVIDER
-        value: console
+        value: plusofon
       - key: NODE_ENV
         value: production
 

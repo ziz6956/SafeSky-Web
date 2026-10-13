@@ -1,0 +1,38 @@
+# CI SafeSky-Web (SAF-300): тесты и coverage бэкенда + синтаксис фронта
+# на каждом пуше в main и в каждом pull request.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: "Backend: тесты + coverage"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      # Тесты мокают БД, но импорты @prisma/client требуют сгенерированный клиент.
+      - run: npx prisma generate
+      - run: npm test
+      # SAF-300: порог покрытия эндпоинтов авторизации — vitest.config.ts (80 %).
+      - run: npm run coverage
+
+  frontend:
+    name: "Frontend: синтаксис JS"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Страницы грузят эти файлы как есть — ловим хотя бы синтаксические регрессы.
+      - run: node --check js/api.js
+      - run: node --check config.js

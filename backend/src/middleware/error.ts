@@ -19,8 +19,10 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     return;
   }
   if (err instanceof SmsSendError) {
-    // Провайдер SMS упал — код не создан, пользователю можно повторить позже.
-    res.status(502).json({ error: "SMS_SEND_FAILED", message: "Не удалось отправить SMS — попробуйте позже" });
+    // Провайдер недоступен/таймаут (SAF-300) — код не создан, кулдаун не сожжён.
+    // 503 Service Unavailable, а не 502: 502 — ошибка шлюза (её отдаёт Render,
+    // когда приложение висит); здесь недоступен ВНЕШНИЙ провайдер — это 503.
+    res.status(503).json({ error: "SMS_SEND_FAILED", message: "Сервис временно недоступен — попробуйте позже" });
     return;
   }
   if (typeof err === "object" && err !== null && (err as { type?: string }).type === "entity.parse.failed") {

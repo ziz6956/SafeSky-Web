@@ -9,7 +9,7 @@
 // (номер звонящего в ответе) — все пути поддерживаются (см. resolveFlashCall в
 // auth/codes.ts).
 import { last4Digits, toExolveDigits } from "../lib/phone";
-import { FlashCallResult, SmsProvider, SmsSendError } from "./provider";
+import { FlashCallResult, PROVIDER_TIMEOUT_MS, SmsProvider, SmsSendError } from "./provider";
 
 const PLUSOFON_SEND_URL = "https://restapi.plusofon.ru/api/v1/flash-call/send";
 
@@ -33,7 +33,12 @@ export function pick(obj: unknown, keys: readonly string[]): string | undefined 
 export class PlusofonFlashCallProvider implements SmsProvider {
   readonly name = "plusofon" as const;
 
-  constructor(private readonly apiKey: string) {}
+  constructor(
+    private readonly apiKey: string,
+    // SAF-300: таймаут вызова /send. Тесты передают маленькое значение, чтобы
+    // проверить сценарий зависшего провайдера за миллисекунды, а не за 10 с.
+    private readonly timeoutMs: number = PROVIDER_TIMEOUT_MS,
+  ) {}
 
   // SMS-канал у Plusofon не используется: Exolve заменён целиком на Flash Call (SAF-223).
   async send(): Promise<void> {
@@ -43,6 +48,8 @@ export class PlusofonFlashCallProvider implements SmsProvider {
   async flashCall(to: string, callbackUrl: string): Promise<FlashCallResult> {
     let res: Response;
     try {
+      // SAF-300: AbortSignal.timeout обрывает и подключение, и чтение тела —
+      // зависший провайдер не подвешивает хендлер до таймаута шлюза Render (502).
       res = await fetch(PLUSOFON_SEND_URL, {
         method: "POST",
         headers: {
@@ -56,8 +63,12 @@ export class PlusofonFlashCallProvider implements SmsProvider {
           // прийти прямо в ответе /send).
           callback_url: callbackUrl || undefined,
         }),
+        signal: AbortSignal.timeout(this.timeoutMs),
       });
     } catch (e) {
+      if (e instanceof Error && (e.name === "AbortError" || e.name === "TimeoutError")) {
+        throw new SmsSendError(`Plusofon: таймаут ${Math.round(this.timeoutMs / 1000)} с — провайдер не ответил`);
+      }
       throw new SmsSendError(`Plusofon недоступен: ${e instanceof Error ? e.message : String(e)}`);
     }
     const text = await res.text().catch(() => "");
