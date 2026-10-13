@@ -14,6 +14,16 @@ import testCallRouter from "./test-call";
 
 const USER_ID = "user-1";
 
+// SAF-294: роутер логирует каждый отказ одной JSON-строкой в console.log.
+// Шпион глушит вывод и даёт тестам читать последнюю лог-строку отказа.
+const consoleLog = vi.spyOn(console, "log").mockImplementation(() => {});
+
+function lastRefusal(): Record<string, unknown> {
+  const call = consoleLog.mock.calls.at(-1);
+  expect(call).toBeDefined();
+  return JSON.parse(call![0] as string);
+}
+
 // Моки и env застаблены ДО статических импортов выше: vi.mock/vi.hoisted
 // всплывают наверх файла, поэтому роутер получает мок-БД, а config —
 // тестовый env (в песочнице NODE_ENV=production, в проде без секретов
@@ -192,6 +202,73 @@ describe("POST /api/test-call", () => {
     expect(last).not.toBeNull();
     expect(last!.status).toBe(429);
     expect(await last!.json()).toMatchObject({ error: "TEST_CALL_TOO_OFTEN" });
+  });
+});
+
+// SAF-294: каждый отказ логируется (код/причина + userId + jobId), без номера —
+// чтобы разбор отказа кнопки не зависел от DevTools. Номер в лог не пишется
+// никогда (ПДн); jobId из params маскируется от цифровых последовательностей
+// (SAF-288-стиль), чтобы крафтовый id не пронёс номер в логи.
+describe("логирование отказов (SAF-294)", () => {
+  it("409 CALLS_DISABLED — в логе код/причина + userId, номера нет", async () => {
+    const uid = "user-log-calls-disabled";
+    dbUserFindUnique.mockResolvedValue({ id: uid, phone: "+79991234567", callsEnabled: false });
+    dbCallConsentFindFirst.mockResolvedValue({ action: "revoke" });
+
+    const res = await fetch(`${baseUrl}/api/test-call`, {
+      method: "POST",
+      headers: authHeader(uid),
+    });
+
+    expect(res.status).toBe(409);
+    expect(lastRefusal()).toMatchObject({
+      event: "test_call_refusal",
+      status: 409,
+      code: "CALLS_DISABLED",
+      userId: uid,
+    });
+    expect(JSON.stringify(lastRefusal())).not.toContain("79991234567");
+  });
+
+  it("429 TEST_CALL_TOO_OFTEN — отказ лимитера тоже в логе", async () => {
+    dbUserFindUnique.mockResolvedValue({ id: USER_ID, phone: "+79991234567", callsEnabled: true });
+    dbCallConsentFindFirst.mockResolvedValue({ action: "grant" });
+    dbCallJobCreate.mockResolvedValue({ id: "job-1", status: "pending" });
+
+    let last = null;
+    for (let i = 0; i < 4; i += 1) {
+      last = await fetch(`${baseUrl}/api/test-call`, {
+        method: "POST",
+        headers: authHeader(USER_ID),
+      });
+    }
+
+    expect(last).not.toBeNull();
+    expect(last!.status).toBe(429);
+    expect(lastRefusal()).toMatchObject({
+      event: "test_call_refusal",
+      status: 429,
+      code: "TEST_CALL_TOO_OFTEN",
+      userId: USER_ID,
+    });
+  });
+
+  it("jobId из params маскируется: крафтовый id не проносит номер в логи", async () => {
+    dbCallJobUpdateMany.mockResolvedValue({ count: 0 });
+
+    const res = await fetch(`${baseUrl}/api/test-call/queue/79161234567/result`, {
+      method: "POST",
+      headers: { ...workerHeader(), "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "delivered" }),
+    });
+
+    expect(res.status).toBe(404);
+    expect(lastRefusal()).toMatchObject({
+      event: "test_call_refusal",
+      status: 404,
+      code: "JOB_NOT_FOUND",
+      jobId: "***",
+    });
   });
 });
 

@@ -1,6 +1,6 @@
 import rateLimit from "express-rate-limit";
 import { Router } from "express";
-import type { RequestHandler } from "express";
+import type { ErrorRequestHandler, RequestHandler } from "express";
 import { config } from "../config";
 import { db } from "../db";
 import { CONSENT_ACTION } from "../lib/consent";
@@ -19,15 +19,41 @@ import { requireAuth } from "../middleware/auth";
 // напрямую (free-тариф, внешних подключений нет) — связка только через эти
 // HTTP-эндпоинты. Аутентификация воркера — Bearer WORKER_TOKEN (не JWT).
 
+// SAF-294: раньше бэкенд логировал только 500-е — отказы POST /api/test-call
+// в логах Render были невидимы, и разбор отказа кнопки зависел от DevTools
+// основателя (урок SAF-293). Теперь каждый не-2xx пишет одну JSON-строку:
+// код/причина + userId + jobId (если есть). Номер телефона в лог НЕ пишется
+// никогда; jobId из params маскируется от цифровых последовательностей
+// (SAF-288-стиль), чтобы даже крафтовый id не мог пронести номер в логи.
+const LOG_DIGITS_RE = /\d{7,}/g;
+
+function logRefusal(status: number, code: string, userId: string | null, jobId?: string): void {
+  const fields: Record<string, unknown> = { event: "test_call_refusal", status, code, userId };
+  if (jobId) fields.jobId = jobId.replace(LOG_DIGITS_RE, "***");
+  console.log(JSON.stringify(fields));
+}
+
+const TEST_CALL_TOO_OFTEN_BODY = {
+  error: "TEST_CALL_TOO_OFTEN",
+  message: "Слишком часто — подождите пару минут и повторите",
+};
+
 // Платный канал (пакет голосовых звонков), поэтому лимит на пользователя:
-// не более 3 тестовых звонков за 10 минут.
+// не более 3 тестовых звонков за 10 минут. Лимитер отвечает сам (не ApiError),
+// поэтому отказ логируется в его handler'е (SAF-294); тело ответа — тот же
+// объект, что отдавал дефолтный handler express-rate-limit.
 const testCallLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
   limit: 3,
   standardHeaders: "draft-7",
   legacyHeaders: false,
   keyGenerator: (_req, res) => (res.locals as { userId: string }).userId ?? "anon",
-  message: { error: "TEST_CALL_TOO_OFTEN", message: "Слишком часто — подождите пару минут и повторите" },
+  message: TEST_CALL_TOO_OFTEN_BODY,
+  handler: (_req, res) => {
+    const { userId } = res.locals as { userId?: string };
+    logRefusal(429, TEST_CALL_TOO_OFTEN_BODY.error, userId ?? null);
+    res.status(429).json(TEST_CALL_TOO_OFTEN_BODY);
+  },
 });
 
 // «Зависшее» ringing-задание (воркер упал между клеймом и результатом)
@@ -139,6 +165,9 @@ router.post(
   "/queue/:id/result",
   requireWorker,
   asyncHandler(async (req, res) => {
+    // jobId в locals — для лога отказа (SAF-294): req.params в error-слое
+    // роутера уже затираются (layer.params = {} у слоя с path "/").
+    (res.locals as { jobId: string }).jobId = req.params.id;
     const status = (req.body as { status?: unknown })?.status;
     if (status !== "delivered" && status !== "failed") {
       throw new ApiError(400, "BAD_STATUS", "status должен быть delivered или failed");
@@ -155,5 +184,17 @@ router.post(
     res.json({ ok: true });
   }),
 );
+
+// SAF-294: лог каждого отказа маршрутов этого роутера (ApiError = 4xx/5xx) —
+// включая 401 из requireAuth/requireWorker, где userId ещё не проставлен.
+// Лог пишется до глобального errorHandler, который формирует ответ; ошибка
+// пробрасывается дальше без изменений.
+router.use(((err, req, res, next) => {
+  if (err instanceof ApiError) {
+    const { userId, jobId } = res.locals as { userId?: string; jobId?: string };
+    logRefusal(err.status, err.code, userId ?? null, jobId);
+  }
+  next(err);
+}) as ErrorRequestHandler);
 
 export default router;
