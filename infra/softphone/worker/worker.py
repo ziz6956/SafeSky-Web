@@ -330,8 +330,9 @@ class Worker:
     # -- регистрация ---------------------------------------------------------
 
     def check_registered(self) -> None:
-        """reginfo (baresip 1.1): ответ {"response":true,"ok":...} с «200 OK»
-        и «binding» в data → регистрация активна. Команды uareg в 1.1 нет."""
+        """reginfo (baresip 1.1): ответ {"response":true,"ok":...} со строкой
+        «0 - sip:<aor> OK Expires …» в data → регистрация активна.
+        Команды uareg в 1.1 нет."""
         self.last_reg_check = time.time()
         try:
             self.ctl.send("reginfo")
@@ -351,7 +352,13 @@ class Worker:
             if isinstance(msg, dict) and "response" in msg:
                 ok = bool(msg.get("ok"))
                 data = str(msg.get("data") or "")
-                if ok and ("200 ok" in data.lower() or "binding" in data.lower()):
+                # baresip 1.1 reginfo: «--- User Agents (1) ---» +
+                # «0 - sip:<aor> OK   Expires 300s» (OK = статус регистрации).
+                # Запасной формат (ua_print_status): «200 OK ... [1 binding]».
+                active = ("--- user agents" in data.lower()
+                          and re.search(r"sip:\S+\s+OK\b", data)) \
+                    or ("200 ok" in data.lower() and "binding" in data.lower())
+                if ok and active:
                     self.registered = True
                     log("SIP-регистрация активна (reginfo)")
                 else:
