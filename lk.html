@@ -171,13 +171,19 @@
 </label>
 </div>
 <p class="w-full font-body-md text-body-md text-text-secondary mt-space-xs max-w-xl" id="calls-consent-note">
-              Я согласен получать автоматические телефонные вызовы от сервиса SafeSky на указанный номер — для подтверждения номера и для доставки уведомлений; понимаю, что вызовы совершаются автоматически, с воспроизведением записанного сообщения. Я могу отказаться в любой момент в личном кабинете — вызовы прекращаются не позднее следующего дня.
+<span class="block font-label-sm text-label-sm uppercase tracking-wider text-text-primary mb-1">Согласие на автоматические вызовы — ст. 44.1-1 ФЗ «О связи»</span>
+<span class="block">Я согласен получать автоматические телефонные вызовы от сервиса SafeSky на указанный номер — для подтверждения номера и для доставки уведомлений; понимаю, что вызовы совершаются автоматически, с воспроизведением записанного сообщения. Я могу отказаться в любой момент в личном кабинете — вызовы прекращаются не позднее следующего дня.</span>
             </p>
 <p class="w-full font-label-sm text-label-sm text-text-secondary hidden" id="calls-toggle-status"></p>
-<!-- Подтверждение повторного согласия (SAF-244): активное действие в ЛК -->
+<!-- Подтверждение повторного согласия (SAF-244): активное действие в ЛК.
+     SAF-296: панель показывается один раз — только при включении тумблера,
+     если действующей записи согласия нет; это согласие на автоматические
+     вызовы (ст. 44.1-1 126-ФЗ), НЕ согласие на обработку ПДн (152-ФЗ) —
+     тексты не объединять (вердикт Legal SAF-177/SAF-244). -->
 <div class="w-full bg-surface-base/60 rounded-lg p-space-md border border-border-crisp hidden" id="calls-confirm">
 <p class="font-body-md text-body-md text-text-secondary leading-snug">
-                Я согласен получать автоматические телефонные вызовы от сервиса SafeSky на указанный номер — для подтверждения номера и для доставки уведомлений; понимаю, что вызовы совершаются автоматически, с воспроизведением записанного сообщения. Я могу отказаться в любой момент в личном кабинете — вызовы прекращаются не позднее следующего дня.
+<span class="block font-label-sm text-label-sm uppercase tracking-wider text-text-primary mb-1">Согласие на автоматические вызовы — ст. 44.1-1 ФЗ «О связи»</span>
+<span class="block">Я согласен получать автоматические телефонные вызовы от сервиса SafeSky на указанный номер — для подтверждения номера и для доставки уведомлений; понимаю, что вызовы совершаются автоматически, с воспроизведением записанного сообщения. Я могу отказаться в любой момент в личном кабинете — вызовы прекращаются не позднее следующего дня.</span>
               </p>
 <label class="flex items-start gap-space-sm cursor-pointer mt-space-sm">
 <input class="mt-1 accent-[#D4FF00] rounded cursor-pointer" id="calls-confirm-check" type="checkbox"/>
@@ -504,7 +510,10 @@
   var callsConfirmBtn = $('calls-confirm-btn');
   var callsConfirmCancel = $('calls-confirm-cancel');
 
-  var state = { airport: null, saving: false, lastFocus: null, testCallBusy: false, testCallTimer: null, callsEnabled: true, callsBusy: false };
+  /* SAF-296: callsEnabled — операционный флаг, consentGranted — действующая
+     запись согласия в журнале call_consents. Тумблер показывает эффективное
+     состояние (флаг И согласие); до загрузки профиля тумблер не трогаем. */
+  var state = { airport: null, saving: false, lastFocus: null, testCallBusy: false, testCallTimer: null, callsEnabled: true, consentGranted: true, profileReady: false, callsBusy: false };
 
   function readSession(key) {
     try { return sessionStorage.getItem(key); } catch (e) { return null; }
@@ -639,7 +648,7 @@
 
   function loadProfile() {
     hideBanner();
-    if (DEMO) { setPhone(demoPhone()); renderList(); return; }
+    if (DEMO) { setPhone(demoPhone()); renderList(); setCallsInteractive(); return; }
     if (!Api || !Api.getToken || !Api.getToken()) {
       setBanner('Сессия истекла. Подтвердите номер заново — вход по коду из SMS.', false);
       renderList();
@@ -649,11 +658,18 @@
       var u = (data && data.user) || {};
       setPhone(u.phone || demoPhone());
       if (u.airport && byCode(u.airport)) { state.airport = u.airport; }
-      // Тумблер звонка — из сервера (состояние согласия, SAF-244).
+      // Тумблер звонка — из сервера (SAF-296): эффективное состояние =
+      // callsEnabled И действующая запись согласия. Аккаунты, созданные до
+      // SAF-244, имеют флаг true без записи grant — тумблер обязан быть OFF,
+      // иначе тестовый звонок ответит 409 CALLS_DISABLED при «включённом»
+      // тумблере (баг основателя 13.10).
       if (typeof u.callsEnabled === 'boolean') {
-        state.callsEnabled = u.callsEnabled;
-        setCallsToggle(state.callsEnabled);
+        state.callsEnabled = u.callsEnabled === true;
+        state.consentGranted = u.consentGranted === true;
+        setCallsToggle(state.callsEnabled && state.consentGranted);
       }
+      state.profileReady = true;
+      setCallsInteractive();
       renderList();
     }).catch(function (err) {
       renderList();
@@ -665,14 +681,25 @@
     });
   }
 
-  /* Тумблер «Голосовой звонок» (SAF-244): операционное состояние согласия.
-     Доказательством служит запись на сервере (call_consents), а не тумблер.
-     Выключение = безусловный отказ (ч. 2 ст. 44.1-1 126-ФЗ): сервер пишет
-     revoke и снимает задания из очереди. Включение = новое согласие —
-     только через явное подтверждение текста в панели. */
+  /* Пока профиль не загружен, тумблер неактивен: неизвестное состояние
+     сервера нельзя переключать — это и был источник бага SAF-296. */
+  function setCallsInteractive() {
+    if (callsToggleLabel) { callsToggleLabel.classList.remove('opacity-50', 'pointer-events-none'); }
+  }
+
+  /* Тумблер «Голосовой звонок» (SAF-244/SAF-296): эффективное состояние
+     согласия = callsEnabled И последняя запись grant в журнале call_consents.
+     Доказательством служит запись на сервере, а не тумблер. Выключение =
+     безусловный отказ (ч. 2 ст. 44.1-1 126-ФЗ): сервер пишет revoke и снимает
+     задания из очереди. Включение = новое согласие; панель подтверждения —
+     один раз, только если действующей записи согласия нет. */
   function setCallsToggle(on) {
     if (!callsToggle) { return; }
     callsToggle.checked = on === true;
+  }
+
+  function callsToggleOn() {
+    return state.callsEnabled && state.consentGranted;
   }
 
   function setCallsStatus(text) {
@@ -698,6 +725,9 @@
     var done = function () {
       state.callsBusy = false;
       state.callsEnabled = next;
+      // Успешный PATCH пишет запись в журнал: grant при включении,
+      // revoke при отказе — зеркалим в состояние (SAF-296).
+      state.consentGranted = next;
       if (callsToggleLabel) { callsToggleLabel.classList.remove('opacity-50', 'pointer-events-none'); }
       setCallsToggle(next);
       if (onDone) { onDone(); }
@@ -705,7 +735,7 @@
     var fail = function (err) {
       state.callsBusy = false;
       if (callsToggleLabel) { callsToggleLabel.classList.remove('opacity-50', 'pointer-events-none'); }
-      setCallsToggle(state.callsEnabled); // вернуть как было
+      setCallsToggle(callsToggleOn()); // вернуть как было
       if (onFail) { onFail(err); }
     };
     if (DEMO || !Api || !Api.patchSettings) { done(); return; }
@@ -714,9 +744,10 @@
   }
 
   function onCallsToggle() {
+    if (!state.profileReady && !DEMO) { setCallsToggle(callsToggleOn()); return; }
     var target = callsToggle.checked;
-    if (state.callsBusy) { setCallsToggle(state.callsEnabled); return; }
-    if (target === state.callsEnabled) { return; }
+    if (state.callsBusy) { setCallsToggle(callsToggleOn()); return; }
+    if (target === callsToggleOn()) { return; }
     if (!target) {
       // Отказ — безусловный и немедленный.
       closeCallsConfirm();
@@ -727,7 +758,17 @@
       });
       return;
     }
-    // Включение — новое согласие: показываем текст, просим явное подтверждение.
+    // Включение. SAF-296: панель подтверждения — один раз, только если
+    // действующей записи согласия нет; при наличии grant повторно не
+    // спрашиваем (согласие уже доказано записью в журнале).
+    if (state.consentGranted) {
+      applyCallsEnabled(true, function () {
+        setCallsStatus('Вызовы включены — согласие зафиксировано.');
+      }, function (err) {
+        setCallsStatus(err && err.status === 401 ? 'Сессия истекла. Подтвердите номер заново.' : 'Не удалось включить вызовы — попробуйте ещё раз.');
+      });
+      return;
+    }
     setCallsToggle(false);
     setCallsStatus('');
     openCallsConfirm();
@@ -843,6 +884,9 @@
 
   setPhone(DEMO ? demoPhone() : '');
   renderList();
+  // SAF-296: до ответа GET /api/me состояние согласия неизвестно —
+  // тумблер неактивен, чтобы «включён по умолчанию» не врал.
+  if (!DEMO && callsToggleLabel) { callsToggleLabel.classList.add('opacity-50', 'pointer-events-none'); }
   loadProfile();
 })();
 </script>

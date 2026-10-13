@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { AIRPORTS } from "../constants";
 import { db } from "../db";
-import { CONSENT_CHANNEL, grantConsentData, revokeConsentData } from "../lib/consent";
+import { CONSENT_ACTION, CONSENT_CHANNEL, grantConsentData, revokeConsentData } from "../lib/consent";
 import { ApiError } from "../lib/errors";
 import { publicUser } from "../lib/user";
 import { asyncHandler } from "../middleware/error";
@@ -14,7 +14,12 @@ import { requireAuth } from "../middleware/auth";
 // Выключение = отказ: безусловный (ч. 2 ст. 44.1-1 126-ФЗ + ПП РФ № 1994
 // пп. 222–226), пишем запись revoke в call_consents и снимаем задания из
 // очереди (pending/ringing → cancelled). Включение = новое согласие: пишем
-// grant с версией показанного текста. Без перехода записей не плодим.
+// grant с версией показанного текста.
+// SAF-296: grant пишется не только при переходе false→true, но и когда флаг
+// уже true, а журнал не доказывает действующее согласие (аккаунты, созданные
+// до SAF-244) — иначе подтверждение в UI не даёт записи, и тестовый звонок
+// по-прежнему отвечает 409 CALLS_DISABLED. При действующем grant и
+// неизменном флаге записей не плодим.
 const router = Router();
 
 router.patch(
@@ -47,13 +52,21 @@ router.patch(
       if (!current) {
         throw new ApiError(401, "UNAUTHORIZED", "Пользователь не найден — войдите заново");
       }
-      if (patch.callsEnabled !== undefined && patch.callsEnabled !== current.callsEnabled) {
+      if (patch.callsEnabled !== undefined) {
         if (patch.callsEnabled) {
-          // Повторное согласие в ЛК — активное действие (подтверждение в UI).
-          await tx.callConsent.create({
-            data: grantConsentData(req, current.id, current.phone, CONSENT_CHANNEL.LK),
+          // Согласие в ЛК — активное действие (подтверждение в UI). Пишем grant,
+          // если флаг не был включён ИЛИ журнал не доказывает действующее
+          // согласие (SAF-296: callsEnabled=true без записи grant).
+          const lastConsent = await tx.callConsent.findFirst({
+            where: { userId },
+            orderBy: [{ createdAt: "desc" }, { id: "desc" }],
           });
-        } else {
+          if (current.callsEnabled !== true || lastConsent?.action !== CONSENT_ACTION.GRANT) {
+            await tx.callConsent.create({
+              data: grantConsentData(req, current.id, current.phone, CONSENT_CHANNEL.LK),
+            });
+          }
+        } else if (current.callsEnabled !== false) {
           // Отказ: запись revoke + снятие стоящих в очереди заданий.
           // Воркер снимает только pending, поэтому снятое не обзванивается;
           // вызовы прекращаются не позднее следующего дня (ч. 2 ст. 44.1-1).

@@ -2,13 +2,16 @@
 // POST /api/auth/verify-code — запись-доказательство grant при регистрации
 //   (номер, время, IP, UA, textId/textVersion, канал) + fail-closed без флага;
 // PATCH /api/settings — revoke при отказе + снятие заданий из очереди,
-//   grant при повторном включении, отсутствие записей при no-op.
+//   grant при повторном включении, отсутствие записей при no-op;
+// SAF-296: grant при включении, когда флаг уже true без записи согласия,
+//   и consentGranted в GET /api/me (проекция эффективного состояния тумблера).
 import express from "express";
 import jwt from "jsonwebtoken";
 import type { Server } from "node:http";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { errorHandler } from "../middleware/error";
 import authRouter from "./auth";
+import meRouter from "./me";
 import settingsRouter from "./settings";
 
 const USER_ID = "user-1";
@@ -17,21 +20,27 @@ const PHONE = "+79991234567";
 // Моки и env застаблены ДО статических импортов выше (см. test-call.test.ts):
 // роутеры получают мок-БД (транзакция исполняет колбэк с мок-клиентом TX),
 // а config — тестовый env.
-const { TX, dbTransaction, verifyCodeMock, TEST_SECRET } = vi.hoisted(() => {
+const { TX, dbTransaction, dbUserFindUnique, dbCallConsentFindFirst, verifyCodeMock, TEST_SECRET } = vi.hoisted(() => {
   const TX = {
-    callConsent: { create: vi.fn() },
+    callConsent: { create: vi.fn(), findFirst: vi.fn() },
     user: { findUnique: vi.fn(), update: vi.fn() },
     callJob: { updateMany: vi.fn() },
   };
   return {
     TX,
     dbTransaction: vi.fn(async (cb: (tx: typeof TX) => Promise<unknown>) => cb(TX)),
+    dbUserFindUnique: vi.fn(),
+    dbCallConsentFindFirst: vi.fn(),
     verifyCodeMock: vi.fn(),
     TEST_SECRET: "test-jwt-secret",
   };
 });
 vi.mock("../db", () => ({
-  db: { $transaction: dbTransaction },
+  db: {
+    $transaction: dbTransaction,
+    user: { findUnique: dbUserFindUnique },
+    callConsent: { findFirst: dbCallConsentFindFirst },
+  },
 }));
 vi.mock("../auth/codes", () => ({
   issueCode: vi.fn(),
@@ -69,6 +78,7 @@ beforeAll(async () => {
   const app = express();
   app.use(express.json());
   app.use("/api/auth", authRouter);
+  app.use("/api/me", meRouter);
   app.use("/api/settings", settingsRouter);
   app.use(errorHandler);
   await new Promise<void>((resolve) => {
@@ -233,5 +243,104 @@ describe("PATCH /api/settings — отказ и повторное соглас�
     expect(res.status).toBe(200);
     expect(TX.callConsent.create).not.toHaveBeenCalled();
     expect(TX.user.update).toHaveBeenCalledWith({ where: { id: USER_ID }, data: { airport: "LED" } });
+  });
+});
+
+function consentRecord(action: string) {
+  return {
+    id: "c-1",
+    userId: USER_ID,
+    phone: PHONE,
+    action,
+    textId: action === "grant" ? "call-consent-auto-calls-ru" : null,
+    textVersion: action === "grant" ? 1 : null,
+    ip: "127.0.0.1",
+    userAgent: "test",
+    channel: "lk",
+    createdAt: new Date(),
+  };
+}
+
+describe("PATCH /api/settings — SAF-296: флаг true без записи согласия", () => {
+  it("включение при callsEnabled=true без grant → grant пишется (аккаунт до SAF-244)", async () => {
+    TX.user.findUnique.mockResolvedValue(user(true));
+    TX.callConsent.findFirst.mockResolvedValue(null);
+    TX.user.update.mockResolvedValue(user(true));
+
+    const res = await fetch(`${baseUrl}/api/settings`, {
+      method: "PATCH",
+      headers: { ...authHeader(USER_ID), "Content-Type": "application/json" },
+      body: JSON.stringify({ callsEnabled: true }),
+    });
+
+    expect(res.status).toBe(200);
+    expect(TX.callConsent.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ action: "grant", textId: "call-consent-auto-calls-ru", textVersion: 1, channel: "lk" }),
+    });
+    expect(TX.callJob.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("включение при действующем grant (true→true) → записей нет", async () => {
+    TX.user.findUnique.mockResolvedValue(user(true));
+    TX.callConsent.findFirst.mockResolvedValue(consentRecord("grant"));
+    TX.user.update.mockResolvedValue(user(true));
+
+    const res = await fetch(`${baseUrl}/api/settings`, {
+      method: "PATCH",
+      headers: { ...authHeader(USER_ID), "Content-Type": "application/json" },
+      body: JSON.stringify({ callsEnabled: true }),
+    });
+
+    expect(res.status).toBe(200);
+    expect(TX.callConsent.create).not.toHaveBeenCalled();
+  });
+
+  it("включение после отказа (последняя запись revoke) → grant пишется", async () => {
+    TX.user.findUnique.mockResolvedValue(user(false));
+    TX.callConsent.findFirst.mockResolvedValue(consentRecord("revoke"));
+    TX.user.update.mockResolvedValue(user(true));
+
+    const res = await fetch(`${baseUrl}/api/settings`, {
+      method: "PATCH",
+      headers: { ...authHeader(USER_ID), "Content-Type": "application/json" },
+      body: JSON.stringify({ callsEnabled: true }),
+    });
+
+    expect(res.status).toBe(200);
+    expect(TX.callConsent.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ action: "grant", channel: "lk" }),
+    });
+  });
+});
+
+describe("GET /api/me — consentGranted (SAF-296)", () => {
+  it("последняя запись grant → consentGranted:true", async () => {
+    dbUserFindUnique.mockResolvedValue(user(true));
+    dbCallConsentFindFirst.mockResolvedValue(consentRecord("grant"));
+
+    const res = await fetch(`${baseUrl}/api/me`, { headers: authHeader(USER_ID) });
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ user: { phone: PHONE, callsEnabled: true, consentGranted: true } });
+  });
+
+  it("последняя запись revoke → consentGranted:false", async () => {
+    dbUserFindUnique.mockResolvedValue(user(false));
+    dbCallConsentFindFirst.mockResolvedValue(consentRecord("revoke"));
+
+    const res = await fetch(`${baseUrl}/api/me`, { headers: authHeader(USER_ID) });
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ user: { callsEnabled: false, consentGranted: false } });
+  });
+
+  it("записей нет (аккаунт до SAF-244) → consentGranted:false", async () => {
+    dbUserFindUnique.mockResolvedValue(user(true));
+    dbCallConsentFindFirst.mockResolvedValue(null);
+
+    const res = await fetch(`${baseUrl}/api/me`, { headers: authHeader(USER_ID) });
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ user: { callsEnabled: true, consentGranted: false } });
   });
 });

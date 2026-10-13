@@ -25,7 +25,9 @@
 //   После успеха токен уже сохранён (localStorage "safesky_token") — можно
 //   переводить пользователя в ЛК.
 //
-// SafeSkyApi.getMe() → { user: { phone, airport, callsEnabled } }
+// SafeSkyApi.getMe() → { user: { phone, airport, callsEnabled, consentGranted } }
+//   consentGranted (SAF-296) — действующая запись согласия на автоматические
+//   вызовы в журнале call_consents; тумблер в ЛК = callsEnabled И consentGranted.
 // SafeSkyApi.patchSettings({ airport?, callsEnabled? }) → { user }
 //   (Bearer-токен подставляется автоматически; 401 UNAUTHORIZED — показать вход)
 //
