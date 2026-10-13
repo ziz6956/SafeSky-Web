@@ -257,7 +257,8 @@ class Worker:
     # -- события ------------------------------------------------------------
 
     def handle_event(self, ev: dict) -> None:
-        name = ev.get("event")
+        # baresip 1.1: события {"event": true, "type": ...} — тип в поле "type".
+        name = ev.get("type")
         if name == "REGISTER_OK":
             self.registered = True
             log("SIP-регистрация активна (событие baresip)")
@@ -274,7 +275,7 @@ class Worker:
                     s.established = True
                     log(f"200 OK — подключаю аудиоисточник: ausrc aufile,{AUDIO_FILE}")
                     try:
-                        self.ctl.send(f"ausrc aufile,{AUDIO_FILE}")
+                        self.ctl.send("ausrc", f"aufile,{AUDIO_FILE}")
                     except OSError as e:
                         log(f"ausrc не ушёл: {e}")
                     # Страховка: если baresip не закроет звонок сам по окончании
@@ -286,7 +287,7 @@ class Worker:
             log(f"AUDIO_ERROR (по окончании файла — ожидаемо): {redact(str(ev))[:160]}")
 
     def _bind_call(self, ev: dict) -> CallSession | None:
-        callid = ev.get("callid")
+        callid = ev.get("id")  # baresip 1.1: id звонка — поле "id", не "callid"
         if callid:
             s = self.calls.get(callid)
             if s is None and self.active is not None:
@@ -298,7 +299,7 @@ class Worker:
         return self.active
 
     def _close_call(self, ev: dict) -> None:
-        callid = ev.get("callid")
+        callid = ev.get("id")  # baresip 1.1: id звонка — поле "id"
         s = self.calls.pop(callid, None) if callid else self.active
         if s is None:
             log(f"CALL_CLOSED без сопоставленного звонка: {redact(str(ev))[:160]}")
@@ -329,13 +330,14 @@ class Worker:
     # -- регистрация ---------------------------------------------------------
 
     def check_registered(self) -> None:
-        """uareg: вывод содержит OK → регистрация активна."""
+        """reginfo (baresip 1.1): ответ {"response":true,"ok":...} с «200 OK»
+        и «binding» в data → регистрация активна. Команды uareg в 1.1 нет."""
         self.last_reg_check = time.time()
         try:
-            self.ctl.send("uareg")
+            self.ctl.send("reginfo")
         except OSError as e:
             self.registered = False
-            log(f"uareg не ушёл: {e}")
+            log(f"reginfo не ушёл: {e}")
             return
         deadline = time.time() + 3.0
         while time.time() < deadline:
@@ -343,21 +345,21 @@ class Worker:
                 msg = self.msg_q.get(timeout=max(0.2, deadline - time.time()))
             except queue.Empty:
                 break
-            if "event" in msg:
+            if isinstance(msg, dict) and msg.get("event") is True:
                 self.handle_event(msg)
                 continue
-            text = str(msg).strip()
-            if not text:
-                continue
-            lower = text.lower()
-            if "ok" in lower and "fail" not in lower:
-                self.registered = True
-                log("SIP-регистрация активна (uareg)")
-            else:
-                self.registered = False
-                log(f"uareg: {redact(text)[:160]}")
-            return
-        log("ответ uareg не получен")
+            if isinstance(msg, dict) and "response" in msg:
+                ok = bool(msg.get("ok"))
+                data = str(msg.get("data") or "")
+                if ok and ("200 ok" in data.lower() or "binding" in data.lower()):
+                    self.registered = True
+                    log("SIP-регистрация активна (reginfo)")
+                else:
+                    self.registered = False
+                    log(f"reginfo: ok={ok} {redact(data)[:160]}")
+                return
+            log(f"reginfo: неожиданное сообщение {redact(str(msg))[:160]}")
+        log("ответ reginfo не получен")
         self.registered = False
 
     # -- цикл ------------------------------------------------------------------
@@ -372,8 +374,11 @@ class Worker:
                 log(f"соединение ctrl_tcp разорвано: {msg['_err']}")
                 self.reconnect()
                 return
-            if "event" in msg:
+            if isinstance(msg, dict) and msg.get("event") is True:
                 self.handle_event(msg)
+            elif isinstance(msg, dict) and "response" in msg:
+                # Ответ на команду вне check_registered — журналируем.
+                log(f"baresip ответ: ok={msg.get('ok')} {redact(str(msg.get('data', '')))[:160]}")
             else:
                 log(f"baresip: {redact(str(msg))[:160]}")
 
@@ -421,7 +426,7 @@ class Worker:
         self.active = s
         log(f"задание {job['id']}: набираю {mask_phone(digits)}")
         try:
-            self.ctl.send(f"dial sip:{digits}@{SIP_SERVER}")
+            self.ctl.send("dial", f"sip:{digits}@{SIP_SERVER}")
         except OSError as e:
             log(f"dial не ушёл: {e}")
             s.result = "failed"
@@ -454,7 +459,7 @@ class Worker:
         digits = normalize_phone(phone)
         s = CallSession(None, phone)
         self.active = s
-        self.ctl.send(f"dial sip:{digits}@{SIP_SERVER}")
+        self.ctl.send("dial", f"sip:{digits}@{SIP_SERVER}")
         log(f"вызываю {mask_phone(digits)} через {SIP_SERVER}")
         while s.result is None:
             self.drain_events()

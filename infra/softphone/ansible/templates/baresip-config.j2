@@ -9,6 +9,7 @@
 
 {% if baresip_version is version('3', '>=') %}
 module_app		ctrl_tcp.so
+module_app		menu.so
 module_aufile		aufile.so
 module_auconv		auconv.so
 module_auresamp		auresamp.so
@@ -27,6 +28,10 @@ module_tmp		account.so
 
 # ctrl_tcp — прикладной модуль (module_app), как в дефолтном шаблоне baresip.
 module_app		ctrl_tcp.so
+
+# menu.so ОБЯЗАТЕЛЕН: регистрирует команды dial/hangup/ausrc/reginfo —
+# без него ctrl_tcp на любую команду отвечает ok=false (SAF-276, протокол 1.1).
+module_app		menu.so
 {% endif %}
 
 # SIP-сигнализация Plusofon (UDP 5060; ufw открывает входящие только от SIP-сети
