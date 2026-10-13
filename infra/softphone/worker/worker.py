@@ -13,6 +13,13 @@ media (183), и baresip рвёт звонок (AUDIO_ERROR → CALL_CLOSED) до
 сам — штатный автосброс. Если абонент не ответил за CALL_TIMEOUT (60 с) —
 воркер шлёт `hangup`.
 
+⚠️ Подмена `ausrc` ПЕРСИСТЕНТНА (SAF-300): источник — состояние UA, конфиг
+на новом звонке не перечитывается. После первого установленного звонка
+источником остался бы короткий тестовый WAV — он кончается в early media
+(183) следующего звонка, и baresip обрывает звонок до ответа абонента.
+Поэтому воркер возвращает заглушку (SILENCE_FILE) перед каждым набором и
+после завершения звонка (`reset_audio_source`).
+
 Источник заданий — очередь Render (HTTP-эндпоинты /api/test-call/queue/*;
 контракт БЕЗ изменений, терминальные статусы иммутабельны — SAF-198).
 Разовая проверка без очереди:
@@ -44,6 +51,9 @@ import urllib.request
 import wave
 
 AUDIO_FILE = os.environ.get("AUDIO_FILE", "/opt/safesky-softphone/audio/test-call-ru.wav")
+# Источник-заглушка (10 мин тишины, фикс A2) для фазы дозвона: воркер
+# возвращает его перед набором и после завершения звонка (SAF-300).
+SILENCE_FILE = os.environ.get("SILENCE_FILE", "/opt/safesky-softphone/audio/silence.wav")
 SIP_SERVER = os.environ.get("SIP_SERVER", "")
 SIP_LOGIN = os.environ.get("SIP_LOGIN", "")
 SIP_PASSWORD = os.environ.get("SIP_PASSWORD", "")
@@ -339,6 +349,23 @@ class Worker:
                 log(f"задание {s.job_id}: {s.result} записан в очередь")
             except Exception as e:  # noqa: BLE001 — задание вернётся по stale-таймауту
                 log(f"не удалось записать результат задания {s.job_id}: {e}")
+        # SAF-300: сброс источника после звонка — инвариант «в фазе дозвона
+        # всегда длинная тишина» держится между звонками.
+        self.reset_audio_source()
+
+    def reset_audio_source(self) -> None:
+        """Вернуть источник-заглушку (SAF-300) — см. докстринг модуля.
+
+        `ausrc` подменяет источник ГЛОБАЛЬНО (состояние UA, конфиг на новом
+        звонке не перечитывается): без сброса после первого установленного
+        звонка источником остаётся короткий тестовый WAV, который кончается
+        в early media (183) — baresip рвёт следующий звонок до ответа
+        абонента (симптом: звонок приходит и обрывается, не дождавшись
+        ответа)."""
+        try:
+            self.ctl.send("ausrc", f"aufile,{SILENCE_FILE}")
+        except OSError as e:
+            log(f"ausrc(silence) не ушёл: {e}")
 
     # -- регистрация ---------------------------------------------------------
 
@@ -446,6 +473,9 @@ class Worker:
         s = CallSession(job["id"], job["phone"])
         self.active = s
         log(f"задание {job['id']}: набираю {mask_phone(digits)}")
+        # SAF-300: заглушка ДО набора — после прошлого установленного звонка
+        # источником мог остаться короткий тестовый WAV (ausrc персистентен).
+        self.reset_audio_source()
         try:
             self.ctl.send("dial", f"sip:{digits}@{SIP_SERVER}")
         except OSError as e:
@@ -485,6 +515,8 @@ class Worker:
         digits = normalize_phone(phone)
         s = CallSession(None, phone)
         self.active = s
+        # SAF-300: заглушка ДО набора (ausrc персистентен между звонками).
+        self.reset_audio_source()
         self.ctl.send("dial", f"sip:{digits}@{SIP_SERVER}")
         log(f"вызываю {mask_phone(digits)} через {SIP_SERVER}")
         while s.result is None:
