@@ -4,8 +4,10 @@
 # Аудиоисточник НЕ задан (фикс A1): WAV подключается воркером по ctrl_tcp
 # командой `ausrc aufile,…` только по событию CALL_ESTABLISHED (200 OK).
 # Если без источника звонок не держится в фазе 183 — прогон плейбука с
-# AUDIO_FALLBACK_SILENCE=true: в конфиг попадёт silence.wav (10 мин) как
-# источник, воркер так же подменит его на тестовый WAV по 200 OK (фикс A2).
+# AUDIO_FALLBACK_SILENCE=true: в конфиг попадут silence.wav (10 мин) как
+# источник (фикс A2) и recv.wav как плеер (фикс A3, SAF-293 — без плеера
+# auplay пишет speaker.wav в CWD и сессия рвётся в early media);
+# воркер так же подменит источник на тестовый WAV по 200 OK.
 
 {% if baresip_version is version('3', '>=') %}
 module_app		ctrl_tcp.so
@@ -47,4 +49,8 @@ ctrl_tcp_listen		{{ ctrl_tcp_listen }}
 # Фикс A2: источник-заглушка, чтобы звонок держался в фазе 183 до ответа.
 # По CALL_ESTABLISHED воркер подменяет источник на тестовый WAV.
 audio_source		aufile,{{ deploy_dir }}/audio/silence.wav
+# Фикс A3 (SAF-293): плеер — в файл recv.wav (каталог audio/recv создаёт
+# плейбук, владелец — сервисный пользователь). Без плеера baresip в early
+# media (183) не переживает аудио-апдейт и рвёт сессию до ответа абонента.
+audio_player		aufile,{{ deploy_dir }}/audio/recv/recv.wav
 {% endif %}
