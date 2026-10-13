@@ -262,6 +262,19 @@
         creates: "{{ deploy_dir }}/audio/silence.wav"
       when: audio_fallback_silence | bool
 
+    # Фикс A3 (SAF-293): аудиоплеер тоже нужен — без него auplay по умолчанию
+    # пишет speaker.wav в CWD baresip («/» — Permission denied, 13.10, прогон
+    # 12:59Z) и сессия не переживает early media (183). Каталог принадлежит
+    # сервисному пользователю: recv.wav создаётся при первом звонке.
+    - name: Каталог recv для аудиоплеера (фикс A3, SAF-293)
+      file:
+        path: "{{ deploy_dir }}/audio/recv"
+        state: directory
+        owner: "{{ service_user }}"
+        group: "{{ service_user }}"
+        mode: "0750"
+      when: audio_fallback_silence | bool
+
     - name: systemd-юнит baresip
       template:
         src: safesky-baresip.service.j2
