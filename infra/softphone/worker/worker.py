@@ -133,7 +133,11 @@ class BaresipCtl:
     def connect(self) -> None:
         self.close()
         self.sock = socket.create_connection(self.addr, timeout=self.timeout)
-        self.sock.settimeout(self.timeout)
+        # Читатель блокируется без таймаута: baresip молчит в простое, и
+        # 5-секундный recv-таймаут рвал соединение каждые ~5 с (SAF-276,
+        # «соединение ctrl_tcp разорвано: timed out»). Обрыв соединения
+        # всё равно детектится: recv вернёт EOF → NetstringError.
+        self.sock.settimeout(None)
         self.buf = b""
 
     def close(self) -> None:
