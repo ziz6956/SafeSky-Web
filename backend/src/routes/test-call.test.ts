@@ -1,7 +1,8 @@
 // Тесты маршрутов тестового прозвонка (SAF-234/235, очередь SIP-воркера):
 // POST /api/test-call — авторизация, постановка в очередь, лимит «3 за 10 минут»,
 // гейт согласия (SAF-244, G-CALL-4: 409 fail-closed), номер из профиля сессии
-// (SAF-285: user.phone вместо статического TEST_CALL_ALLOWLIST);
+// (SAF-285: user.phone вместо статического TEST_CALL_ALLOWLIST, E.164 на
+// точке записи — SAF-287);
 // GET /queue/poll — токен воркера, клейм, пустая очередь, гонка двух воркеров;
 // POST /queue/:id/result — терминальный статус, иммутабельность (SAF-198).
 import express from "express";
@@ -195,11 +196,12 @@ describe("POST /api/test-call", () => {
 });
 
 // SAF-285: номер для звонка — профиль сессии (user.phone), статический
-// TEST_CALL_ALLOWLIST (SAF-247) убран по директиве основателя. Каждый кейс —
+// TEST_CALL_ALLOWLIST (SAF-247) убран по директиве основателя; инвариант E.164
+// на точке записи восстановлен (SAF-287, defense-in-depth). Каждый кейс —
 // свой userId, чтобы rate-limit («3 за 10 минут», ключ — userId) не мешал.
 describe("POST /api/test-call — номер из профиля сессии (SAF-285)", () => {
-  it("формат номера в профиле не важен — задание ставится с номером как есть (без CSV)", async () => {
-    const uid = "user-session-phone-format";
+  it("номер из профиля нормализуется к E.164 на точке записи (инвариант SAF-287)", async () => {
+    const uid = "user-session-phone-normalize";
     dbUserFindUnique.mockResolvedValue({ id: uid, phone: "8 999 123-45-67", callsEnabled: true });
     dbCallConsentFindFirst.mockResolvedValue({ action: "grant" });
     dbCallJobCreate.mockResolvedValue({ id: "job-1", status: "pending" });
@@ -211,10 +213,26 @@ describe("POST /api/test-call — номер из профиля сессии (S
 
     expect(res.status).toBe(202);
     expect(await res.json()).toMatchObject({ ok: true, status: "queued", jobId: "job-1" });
-    // Номер взят из профиля сессии, а не из allowlist/нормализатора.
+    // Номер взят из профиля сессии и нормализован к E.164 (+7…), как обещает
+    // схема CallJob.phone — без нормализации воркер получил бы сырой формат.
     expect(dbCallJobCreate).toHaveBeenCalledWith({
-      data: { userId: uid, phone: "8 999 123-45-67" },
+      data: { userId: uid, phone: "+79991234567" },
     });
+  });
+
+  it("номер в профиле не похож на российский мобильный → 409 PHONE_INVALID, задание не ставится", async () => {
+    const uid = "user-session-phone-invalid";
+    dbUserFindUnique.mockResolvedValue({ id: uid, phone: "12345", callsEnabled: true });
+    dbCallConsentFindFirst.mockResolvedValue({ action: "grant" });
+
+    const res = await fetch(`${baseUrl}/api/test-call`, {
+      method: "POST",
+      headers: authHeader(uid),
+    });
+
+    expect(res.status).toBe(409);
+    expect(await res.json()).toMatchObject({ error: "PHONE_INVALID" });
+    expect(dbCallJobCreate).not.toHaveBeenCalled();
   });
 
   it("нет номера в профиле — 409 PHONE_MISSING, задание не ставится (fail-closed)", async () => {
